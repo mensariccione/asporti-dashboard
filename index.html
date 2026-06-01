@@ -94,9 +94,9 @@ header span{font-size:.9rem;opacity:.8}
   </div>
 </div>
 <script>
-var APIKEY = 'AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q';
-var PROJ = 'spiagge2026';
-var BASE = 'https://firestore.googleapis.com/v1/projects/' + PROJ + '/databases/(default)/documents';
+var APIKEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
+var PROJ = "spiagge2026";
+var BASE = "https://firestore.googleapis.com/v1/projects/" + PROJ + "/databases/(default)/documents";
 var allOrdini = [];
 var filterFrom = null;
 var filterTo = null;
@@ -104,60 +104,64 @@ var pendingDeleteId = null;
 
 function parseEuro(s) {
   if (!s) return 0;
-  return parseFloat(s.replace(/[^0-9,]/g, '').replace(',', '.')) || 0;
+  return parseFloat(s.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
 }
 
 function formatEuro(v) {
-  return v.toFixed(2).replace('.', ',') + ' €';
+  return v.toFixed(2).replace(".", ",") + " €";
 }
 
 function parseDate(s) {
   if (!s) return null;
-  var p = s.split('/');
+  var p = s.split("/");
   if (p.length !== 3) return null;
   return new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
 }
 
 function getStr(fields, key) {
-  return (fields[key] && fields[key].stringValue) || '';
+  return (fields[key] && fields[key].stringValue) || "";
 }
 
 function getArr(fields, key) {
   return (fields[key] && fields[key].arrayValue && fields[key].arrayValue.values) || [];
 }
 
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
 function loadData() {
-  document.getElementById('last-update').textContent = 'Aggiornamento...';
-  var url = BASE + '/asporti?key=' + APIKEY + '&pageSize=300';
+  document.getElementById("last-update").textContent = "Aggiornamento...";
+  var url = BASE + "/asporti?key=" + APIKEY + "&pageSize=300";
   fetch(url)
     .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     })
     .then(function(data) {
       var docs = data.documents || [];
       allOrdini = docs.map(function(doc) {
         var f = doc.fields || {};
-        var id = doc.name.split('/').pop();
-        var pArr = getArr(f, 'piatti');
+        var id = doc.name.split("/").pop();
+        var pArr = getArr(f, "piatti");
         var piatti = pArr.map(function(p) {
           var m = (p.mapValue && p.mapValue.fields) || {};
           return {
-            quantita: (m.quantita && (m.quantita.integerValue || m.quantita.stringValue)) || '1',
-            descrizione: (m.descrizione && m.descrizione.stringValue) || '',
-            prezzo: (m.prezzo && m.prezzo.stringValue) || '',
-            varianti: (m.varianti && m.varianti.stringValue) || ''
+            quantita: (m.quantita && (m.quantita.integerValue || m.quantita.stringValue)) || "1",
+            descrizione: (m.descrizione && m.descrizione.stringValue) || "",
+            prezzo: (m.prezzo && m.prezzo.stringValue) || "",
+            varianti: (m.varianti && m.varianti.stringValue) || ""
           };
         }).filter(function(p) { return p.descrizione; });
         return {
           id: id,
-          data_giorno: getStr(f, 'data_giorno'),
-          timestamp: getStr(f, 'timestamp'),
-          nome: getStr(f, 'nome'),
-          numero_telefono: getStr(f, 'numero_telefono'),
-          spiaggia: getStr(f, 'spiaggia'),
-          orario: getStr(f, 'orario'),
-          totale: getStr(f, 'totale'),
+          data_giorno: getStr(f, "data_giorno"),
+          timestamp: getStr(f, "timestamp"),
+          nome: getStr(f, "nome"),
+          numero_telefono: getStr(f, "numero_telefono"),
+          spiaggia: getStr(f, "spiaggia"),
+          orario: getStr(f, "orario"),
+          totale: getStr(f, "totale"),
           piatti: piatti
         };
       });
@@ -165,55 +169,71 @@ function loadData() {
         return b.timestamp.localeCompare(a.timestamp);
       });
       renderAll();
-      document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
+      document.getElementById("last-update").textContent = "Aggiornato: " + new Date().toLocaleString("it-IT");
     })
     .catch(function(e) {
-      document.getElementById('content').innerHTML = '<div class="err"><b>Errore:</b><br>' + e.message + '</div>';
-      document.getElementById('last-update').textContent = 'Errore';
+      document.getElementById("content").innerHTML = "<div class=\"err\"><b>Errore:</b><br>" + e.message + "</div>";
+      document.getElementById("last-update").textContent = "Errore";
     });
 }
 
 function applyFilter() {
-  filterFrom = document.getElementById('filter-from').value;
-  filterTo = document.getElementById('filter-to').value;
+  filterFrom = document.getElementById("filter-from").value;
+  filterTo = document.getElementById("filter-to").value;
   renderAll();
 }
 
 function resetFilter() {
   filterFrom = null;
   filterTo = null;
-  document.getElementById('filter-from').value = '';
-  document.getElementById('filter-to').value = '';
+  document.getElementById("filter-from").value = "";
+  document.getElementById("filter-to").value = "";
   renderAll();
 }
 
 function toggleDetail(id) {
-  var r = document.getElementById('d-' + id);
-  if (r) r.classList.toggle('open');
+  var r = document.getElementById("d-" + id);
+  if (r) r.classList.toggle("open");
 }
 
 function openModal(id, nome) {
   pendingDeleteId = id;
-  document.getElementById('modal-name').textContent = nome || 'questo ordine';
-  document.getElementById('modal').classList.add('open');
+  document.getElementById("modal-name").textContent = nome || "questo ordine";
+  document.getElementById("modal").classList.add("open");
 }
 
 function closeModal() {
   pendingDeleteId = null;
-  document.getElementById('modal').classList.remove('open');
+  document.getElementById("modal").classList.remove("open");
 }
 
 function confirmDelete() {
   if (!pendingDeleteId) return;
-  var url = BASE + '/asporti/' + pendingDeleteId + '?key=' + APIKEY;
-  fetch(url, { method: 'DELETE' })
+  var url = BASE + "/asporti/" + pendingDeleteId + "?key=" + APIKEY;
+  fetch(url, { method: "DELETE" })
     .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) throw new Error("HTTP " + r.status);
       closeModal();
       loadData();
     })
-    .catch(function(e) { alert('Errore: ' + e.message); });
+    .catch(function(e) { alert("Errore: " + e.message); });
 }
+
+document.addEventListener("click", function(e) {
+  var btn = e.target.closest(".delete-btn");
+  if (btn) {
+    e.stopPropagation();
+    var id = btn.getAttribute("data-id");
+    var nome = btn.getAttribute("data-nome");
+    openModal(id, nome);
+    return;
+  }
+  var row = e.target.closest(".order-row");
+  if (row) {
+    var id = row.getAttribute("data-id");
+    toggleDetail(id);
+  }
+});
 
 function renderAll() {
   var ordini = allOrdini.slice();
@@ -222,12 +242,12 @@ function renderAll() {
       var d = parseDate(o.data_giorno);
       if (!d) return true;
       if (filterFrom) {
-        var fp = filterFrom.split('-');
+        var fp = filterFrom.split("-");
         var fromD = new Date(parseInt(fp[0],10), parseInt(fp[1],10)-1, parseInt(fp[2],10));
         if (d < fromD) return false;
       }
       if (filterTo) {
-        var tp = filterTo.split('-');
+        var tp = filterTo.split("-");
         var toD = new Date(parseInt(tp[0],10), parseInt(tp[1],10)-1, parseInt(tp[2],10));
         if (d > toD) return false;
       }
@@ -236,7 +256,7 @@ function renderAll() {
   }
 
   var today = new Date();
-  var todayStr = today.getDate().toString().padStart(2,'0') + '/' + (today.getMonth()+1).toString().padStart(2,'0') + '/' + today.getFullYear();
+  var todayStr = today.getDate().toString().padStart(2,"0") + "/" + (today.getMonth()+1).toString().padStart(2,"0") + "/" + today.getFullYear();
   var oggiOrdini = 0;
   var oggiTot = 0;
   var giorniSet = {};
@@ -244,56 +264,56 @@ function renderAll() {
     if (o.data_giorno === todayStr) { oggiOrdini++; oggiTot += parseEuro(o.totale); }
     if (o.data_giorno) giorniSet[o.data_giorno] = true;
   });
-  document.getElementById('stat-oggi').textContent = oggiOrdini;
-  document.getElementById('stat-tot-oggi').textContent = formatEuro(oggiTot);
-  document.getElementById('stat-totali').textContent = allOrdini.length;
-  document.getElementById('stat-giorni').textContent = Object.keys(giorniSet).length;
+  document.getElementById("stat-oggi").textContent = oggiOrdini;
+  document.getElementById("stat-tot-oggi").textContent = formatEuro(oggiTot);
+  document.getElementById("stat-totali").textContent = allOrdini.length;
+  document.getElementById("stat-giorni").textContent = Object.keys(giorniSet).length;
 
   if (ordini.length === 0) {
-    document.getElementById('content').innerHTML = '<div class="empty">Nessun ordine trovato.</div>';
+    document.getElementById("content").innerHTML = "<div class=\"empty\">Nessun ordine trovato.</div>";
     return;
   }
 
   var byDay = {};
   var dayOrder = [];
   ordini.forEach(function(o) {
-    var day = o.data_giorno || 'Senza data';
+    var day = o.data_giorno || "Senza data";
     if (!byDay[day]) { byDay[day] = []; dayOrder.push(day); }
     byDay[day].push(o);
   });
 
-  var html2 = '';
+  var html2 = "";
   dayOrder.forEach(function(day) {
     var list = byDay[day];
     var dayTot = 0;
     list.forEach(function(o) { dayTot += parseEuro(o.totale); });
-    html2 += '<div class="day-group">';
-    html2 += '<div class="day-header"><h2>' + day + '</h2><span class="day-total">Totale: ' + formatEuro(dayTot) + '</span></div>';
-    html2 += '<table class="orders-table"><thead><tr><th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th></tr></thead><tbody>';
+    html2 += "<div class=\"day-group\">";
+    html2 += "<div class=\"day-header\"><h2>" + escapeHtml(day) + "</h2><span class=\"day-total\">Totale: " + formatEuro(dayTot) + "</span></div>";
+    html2 += "<table class=\"orders-table\"><thead><tr><th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th></tr></thead><tbody>";
     list.forEach(function(o) {
-      html2 += '<tr class="order-row" onclick="toggleDetail('' + o.id + '')">';
-      html2 += '<td>' + (o.orario || '-') + '</td>';
-      html2 += '<td>' + (o.nome || '-') + '</td>';
-      html2 += '<td>' + (o.numero_telefono || '-') + '</td>';
-      html2 += '<td>' + (o.spiaggia || '-') + '</td>';
-      html2 += '<td><span class="totale-badge">' + (o.totale || '-') + '</span></td>';
-      html2 += '<td><button class="delete-btn" onclick="event.stopPropagation();openModal('' + o.id + '','' + (o.nome||'').replace(/'/g,"\'") + '')">&#10005;</button></td>';
-      html2 += '</tr>';
-      html2 += '<tr class="detail-row" id="d-' + o.id + '"><td colspan="6">';
+      html2 += "<tr class=\"order-row\" data-id=\"" + o.id + "\">";
+      html2 += "<td>" + escapeHtml(o.orario || "-") + "</td>";
+      html2 += "<td>" + escapeHtml(o.nome || "-") + "</td>";
+      html2 += "<td>" + escapeHtml(o.numero_telefono || "-") + "</td>";
+      html2 += "<td>" + escapeHtml(o.spiaggia || "-") + "</td>";
+      html2 += "<td><span class=\"totale-badge\">" + escapeHtml(o.totale || "-") + "</span></td>";
+      html2 += "<td><button class=\"delete-btn\" data-id=\"" + o.id + "\" data-nome=\"" + escapeHtml(o.nome) + "\">&#10005;</button></td>";
+      html2 += "</tr>";
+      html2 += "<tr class=\"detail-row\" id=\"d-" + o.id + "\"><td colspan=\"6\">";
       if (o.piatti && o.piatti.length > 0) {
-        html2 += '<table class="piatti-table"><thead><tr><th>Qt</th><th>Descrizione</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>';
+        html2 += "<table class=\"piatti-table\"><thead><tr><th>Qt</th><th>Descrizione</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>";
         o.piatti.forEach(function(p) {
-          html2 += '<tr><td>' + p.quantita + '</td><td>' + p.descrizione + '</td><td>' + p.prezzo + '</td><td>' + (p.varianti||'-') + '</td></tr>';
+          html2 += "<tr><td>" + escapeHtml(p.quantita) + "</td><td>" + escapeHtml(p.descrizione) + "</td><td>" + escapeHtml(p.prezzo) + "</td><td>" + escapeHtml(p.varianti || "-") + "</td></tr>";
         });
-        html2 += '</tbody></table>';
+        html2 += "</tbody></table>";
       } else {
-        html2 += '<div class="piatti-empty">Nessun piatto registrato per questo ordine.</div>';
+        html2 += "<div class=\"piatti-empty\">Nessun piatto registrato per questo ordine.</div>";
       }
-      html2 += '</td></tr>';
+      html2 += "</td></tr>";
     });
-    html2 += '</tbody></table></div>';
+    html2 += "</tbody></table></div>";
   });
-  document.getElementById('content').innerHTML = html2;
+  document.getElementById("content").innerHTML = html2;
 }
 
 loadData();
