@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Asporti - Spiagge 2026</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Asporti</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c}
 header{background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:white;padding:20px 30px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 header h1{font-size:1.6rem}header span{font-size:.9rem;opacity:.8}
 .container{max-width:1100px;margin:30px auto;padding:0 20px}
@@ -17,44 +13,35 @@ header h1{font-size:1.6rem}header span{font-size:.9rem;opacity:.8}
 .stat-card .label{font-size:.8rem;color:#718096;text-transform:uppercase;letter-spacing:.05em}
 .stat-card .value{font-size:2rem;font-weight:700;color:#1e3a5f;margin-top:4px}
 .filters{background:white;border-radius:12px;padding:16px 20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.filters label{font-size:.85rem;color:#4a5568;font-weight:600}
-.filters input[type=date]{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.9rem}
+.filters label{font-size:.85rem;color:#4a5568;font-weight:600}.filters input[type=date]{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.9rem}
 .filters button{padding:8px 18px;background:#2d6a9f;color:white;border:none;border-radius:8px;cursor:pointer;font-size:.9rem}
 .filters button:hover{background:#1e3a5f}.filters button.reset{background:#e2e8f0;color:#4a5568}
-.day-group{margin-bottom:28px}
-.day-header{background:#1e3a5f;color:white;padding:10px 18px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center}
+.day-group{margin-bottom:28px}.day-header{background:#1e3a5f;color:white;padding:10px 18px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center}
 .day-header h2{font-size:1rem}.day-header .day-total{font-size:.9rem;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px}
 .orders-table{width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07);border-radius:0 0 10px 10px;overflow:hidden}
 .orders-table th{background:#edf2f7;padding:10px 14px;text-align:left;font-size:.8rem;color:#4a5568;text-transform:uppercase;letter-spacing:.05em}
 .orders-table td{padding:12px 14px;font-size:.9rem;border-bottom:1px solid #f7fafc;vertical-align:middle}
-.orders-table tr.order-row{cursor:pointer;transition:background .15s}
-.orders-table tr.order-row:hover td{background:#ebf4ff}
+.orders-table tr.order-row{cursor:pointer}.orders-table tr.order-row:hover td{background:#ebf4ff}
 .orders-table tr:last-child td{border-bottom:none}
 .totale-badge{background:#c6f6d5;color:#276749;padding:3px 10px;border-radius:20px;font-weight:600;font-size:.85rem}
-.delete-btn{background:none;border:none;cursor:pointer;color:#fc8181;font-size:1.2rem;padding:2px 6px;border-radius:6px;transition:background .15s;line-height:1}
+.delete-btn{background:none;border:none;cursor:pointer;color:#fc8181;font-size:1.2rem;padding:2px 8px;border-radius:6px;line-height:1}
 .delete-btn:hover{background:#fff5f5;color:#e53e3e}
-.detail-row{display:none;background:#f7fafc}
-.detail-row.open{display:table-row}
+.detail-row{display:none;background:#f7fafc}.detail-row.open{display:table-row}
 .detail-row td{padding:0!important;border-bottom:1px solid #e2e8f0}
-.piatti-table{width:100%;border-collapse:collapse;margin:0}
-.piatti-table th{background:#e2e8f0;padding:7px 14px;text-align:left;font-size:.75rem;color:#4a5568;text-transform:uppercase}
-.piatti-table td{padding:8px 14px;font-size:.85rem;border-bottom:1px solid #edf2f7;color:#2d3748}
-.piatti-table tr:last-child td{border-bottom:none}
+.piatti-table{width:100%;border-collapse:collapse}.piatti-table th{background:#e2e8f0;padding:7px 14px;text-align:left;font-size:.75rem;color:#4a5568;text-transform:uppercase}
+.piatti-table td{padding:8px 14px;font-size:.85rem;border-bottom:1px solid #edf2f7}.piatti-table tr:last-child td{border-bottom:none}
 .piatti-empty{padding:12px 14px;color:#a0aec0;font-size:.85rem;font-style:italic}
-.varianti-badge{font-size:.75rem;color:#718096;margin-left:6px}
-.empty{text-align:center;padding:60px;color:#a0aec0}
-.loading{text-align:center;padding:60px;color:#a0aec0;font-size:1.1rem}
+.empty{text-align:center;padding:60px;color:#a0aec0}.loading{text-align:center;padding:60px;color:#a0aec0;font-size:1.1rem}
+.err{text-align:center;padding:32px;color:#e53e3e;background:#fff5f5;border-radius:12px;margin:20px 0;font-size:.9rem}
 .refresh-btn{position:fixed;bottom:24px;right:24px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:14px 22px;cursor:pointer;font-size:1rem;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .refresh-btn:hover{background:#1e3a5f}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:white;border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2);text-align:center}
+.modal-overlay.open{display:flex}.modal{background:white;border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2);text-align:center}
 .modal h3{font-size:1.2rem;color:#1e3a5f;margin-bottom:10px}.modal p{color:#4a5568;font-size:.95rem;margin-bottom:20px}
-.modal .modal-name{font-weight:700;color:#1e3a5f}
-.modal-btns{display:flex;gap:12px;justify-content:center}
+.modal .modal-name{font-weight:700;color:#1e3a5f}.modal-btns{display:flex;gap:12px;justify-content:center}
 .modal-btns button{padding:10px 24px;border:none;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600}
 .btn-cancel{background:#e2e8f0;color:#4a5568}.btn-delete{background:#fc8181;color:white}.btn-delete:hover{background:#e53e3e}
-@media(max-width:600px){.orders-table{font-size:.8rem}.orders-table th,.orders-table td{padding:8px 10px}}
+@media(max-width:600px){.orders-table td,.orders-table th{padding:8px 8px;font-size:.8rem}}
 </style>
 </head>
 <body>
@@ -67,18 +54,17 @@ header h1{font-size:1.6rem}header span{font-size:.9rem;opacity:.8}
     <div class="stat-card"><div class="label">Giorni Attivi</div><div class="value" id="stat-giorni">-</div></div>
   </div>
   <div class="filters">
-    <label>Filtra per data:</label>
+    <label>Filtra:</label>
     <input type="date" id="filter-from"><span>&#8594;</span><input type="date" id="filter-to">
-    <button onclick="applyFilter()">Filtra</button>
-    <button class="reset" onclick="resetFilter()">Tutti</button>
+    <button onclick="applyFilter()">Filtra</button><button class="reset" onclick="resetFilter()">Tutti</button>
   </div>
-  <div id="content"><div class="loading">&#9203; Caricamento ordini...</div></div>
+  <div id="content"><div class="loading">&#9203; Caricamento...</div></div>
 </div>
 <button class="refresh-btn" onclick="loadData()">&#128260; Aggiorna</button>
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h3>&#128465;&#65039; Cancella ordine</h3>
-    <p>Vuoi eliminare l'ordine di <span class="modal-name" id="modal-name"></span>?<br>Questa azione non può essere annullata.</p>
+    <h3>&#128465; Cancella ordine</h3>
+    <p>Eliminare l'ordine di <span class="modal-name" id="modal-name"></span>?<br><small>Azione irreversibile.</small></p>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal()">Annulla</button>
       <button class="btn-delete" onclick="confirmDelete()">Elimina</button>
@@ -86,72 +72,83 @@ header h1{font-size:1.6rem}header span{font-size:.9rem;opacity:.8}
   </div>
 </div>
 <script>
-const firebaseConfig={apiKey:"AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q",authDomain:"spiagge2026.firebaseapp.com",projectId:"spiagge2026",storageBucket:"spiagge2026.firebasestorage.app",messagingSenderId:"1062182647783",appId:"1:1062182647783:web:2e469c901b9c92ebe52f42"};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-let allOrdini=[],filterFrom=null,filterTo=null,pendingDeleteId=null;
-function parseEuro(s){if(!s)return 0;return parseFloat(s.replace(/[^0-9,]/g,'').replace(',','.'))||0}
-function formatEuro(v){return v.toFixed(2).replace('.',',')+" €"}
-function parseDateIT(s){if(!s)return null;const[d,m,y]=s.split('/');return new Date(y,m-1,d)}
-async function loadData(){
+var K='AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q',P='spiagge2026';
+var BASE='https://firestore.googleapis.com/v1/projects/'+P+'/databases/(default)/documents';
+var allOrdini=[],filterFrom=null,filterTo=null,pendingDeleteId=null;
+function pe(s){if(!s)return 0;return parseFloat(s.replace(/[^0-9,]/g,'').replace(',','.'))||0}
+function fe(v){return v.toFixed(2).replace('.',',')+" €"}
+function pd(s){if(!s)return null;var p=s.split('/');return new Date(+p[2],+p[1]-1,+p[0])}
+function fs(f,k){return(f[k]&&f[k].stringValue)||''}
+function fa(f,k){return(f[k]&&f[k].arrayValue&&f[k].arrayValue.values)||[]}
+function loadData(){
   document.getElementById('last-update').textContent='Aggiornamento...';
-  try{
-    const snap=await db.collection('asporti').orderBy('timestamp','desc').get();
-    allOrdini=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderAll();
-    document.getElementById('last-update').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
-  }catch(e){document.getElementById('content').innerHTML='<div class="empty"><p>⚠️ Errore: '+e.message+'</p></div>'}
+  fetch(BASE+'/asporti?key='+K+'&pageSize=300')
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    .then(function(data){
+      var docs=data.documents||[];
+      allOrdini=docs.map(function(doc){
+        var f=doc.fields||{},id=doc.name.split('/').pop();
+        var pr=fa(f,'piatti');
+        var piatti=pr.map(function(p){
+          var m=(p.mapValue&&p.mapValue.fields)||{};
+          return{quantita:(m.quantita&&(m.quantita.integerValue||m.quantita.stringValue))||'1',descrizione:(m.descrizione&&m.descrizione.stringValue)||'',prezzo:(m.prezzo&&m.prezzo.stringValue)||'',varianti:(m.varianti&&m.varianti.stringValue)||''};
+        }).filter(function(p){return p.descrizione});
+        return{id:id,data_giorno:fs(f,'data_giorno'),timestamp:fs(f,'timestamp'),nome:fs(f,'nome'),numero_telefono:fs(f,'numero_telefono'),spiaggia:fs(f,'spiaggia'),orario:fs(f,'orario'),totale:fs(f,'totale'),piatti:piatti};
+      });
+      allOrdini.sort(function(a,b){return b.timestamp.localeCompare(a.timestamp)});
+      renderAll();
+      document.getElementById('last-update').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
+    })
+    .catch(function(e){
+      document.getElementById('content').innerHTML='<div class="err"><b>Errore caricamento:</b><br>'+e.message+'</div>';
+      document.getElementById('last-update').textContent='Errore';
+    });
 }
 function applyFilter(){filterFrom=document.getElementById('filter-from').value;filterTo=document.getElementById('filter-to').value;renderAll()}
 function resetFilter(){filterFrom=null;filterTo=null;document.getElementById('filter-from').value='';document.getElementById('filter-to').value='';renderAll()}
-function toggleDetail(id){const row=document.getElementById('detail-'+id);if(row)row.classList.toggle('open')}
+function toggleDetail(id){var r=document.getElementById('d-'+id);if(r)r.classList.toggle('open')}
 function openModal(id,nome){pendingDeleteId=id;document.getElementById('modal-name').textContent=nome||'questo ordine';document.getElementById('modal').classList.add('open')}
 function closeModal(){pendingDeleteId=null;document.getElementById('modal').classList.remove('open')}
-async function confirmDelete(){
+function confirmDelete(){
   if(!pendingDeleteId)return;
-  try{await db.collection('asporti').doc(pendingDeleteId).delete();closeModal();loadData()}
-  catch(e){alert('Errore eliminazione: '+e.message)}
+  fetch(BASE+'/asporti/'+pendingDeleteId+'?key='+K,{method:'DELETE'})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);closeModal();loadData()})
+    .catch(function(e){alert('Errore: '+e.message)});
 }
 function renderAll(){
-  let ordini=[...allOrdini];
-  if(filterFrom||filterTo){ordini=ordini.filter(o=>{const d=parseDateIT(o.data_giorno);if(!d)return true;if(filterFrom&&d<new Date(filterFrom))return false;if(filterTo&&d>new Date(filterTo))return false;return true})}
-  const oggi=new Date().toLocaleDateString('it-IT');
-  const ordiniOggi=allOrdini.filter(o=>o.data_giorno===oggi);
-  const totOggi=ordiniOggi.reduce((s,o)=>s+parseEuro(o.totale),0);
-  const giorniUnici=new Set(allOrdini.map(o=>o.data_giorno)).size;
-  document.getElementById('stat-oggi').textContent=ordiniOggi.length;
-  document.getElementById('stat-tot-oggi').textContent=formatEuro(totOggi);
+  var ordini=allOrdini.slice();
+  if(filterFrom||filterTo){ordini=ordini.filter(function(o){var d=pd(o.data_giorno);if(!d)return true;if(filterFrom&&d<new Date(filterFrom))return false;if(filterTo&&d>new Date(filterTo))return false;return true})}
+  var oggi=new Date().toLocaleDateString('it-IT');
+  var oo=allOrdini.filter(function(o){return o.data_giorno===oggi});
+  document.getElementById('stat-oggi').textContent=oo.length;
+  document.getElementById('stat-tot-oggi').textContent=fe(oo.reduce(function(s,o){return s+pe(o.totale)},0));
   document.getElementById('stat-totali').textContent=allOrdini.length;
-  document.getElementById('stat-giorni').textContent=giorniUnici;
+  document.getElementById('stat-giorni').textContent=new Set(allOrdini.map(function(o){return o.data_giorno})).size;
   if(!ordini.length){document.getElementById('content').innerHTML='<div class="empty"><p>Nessun ordine trovato.</p></div>';return}
-  const gruppi={};
-  ordini.forEach(o=>{if(!gruppi[o.data_giorno])gruppi[o.data_giorno]=[];gruppi[o.data_giorno].push(o)});
-  const giorni=Object.keys(gruppi).sort((a,b)=>parseDateIT(b)-parseDateIT(a));
-  let html='';
-  giorni.forEach(g=>{
-    const lista=gruppi[g];
-    const tot=lista.reduce((s,o)=>s+parseEuro(o.totale),0);
-    html+='<div class="day-group"><div class="day-header"><h2>&#128197; '+g+'</h2><span class="day-total">'+lista.length+' ordini &middot; '+formatEuro(tot)+'</span></div>';
+  var gruppi={};
+  ordini.forEach(function(o){if(!gruppi[o.data_giorno])gruppi[o.data_giorno]=[];gruppi[o.data_giorno].push(o)});
+  var giorni=Object.keys(gruppi).sort(function(a,b){return pd(b)-pd(a)});
+  var html='';
+  giorni.forEach(function(g){
+    var lista=gruppi[g],tot=lista.reduce(function(s,o){return s+pe(o.totale)},0);
+    html+='<div class="day-group"><div class="day-header"><h2>&#128197; '+g+'</h2><span class="day-total">'+lista.length+' ordini &middot; '+fe(tot)+'</span></div>';
     html+='<table class="orders-table"><thead><tr><th></th><th>Orario</th><th>Nome</th><th>Telefono</th><th>Spiaggia</th><th>Piatti</th><th>Totale</th><th></th></tr></thead><tbody>';
-    lista.forEach(o=>{
-      const nPiatti=(o.piatti&&o.piatti.length)||0;
-      const safeId=o.id.replace(/[^a-zA-Z0-9]/g,'_');
-      html+='<tr class="order-row" onclick="toggleDetail(''+safeId+'')">';
-      html+='<td style="color:#a0aec0;font-size:.85rem;width:20px">&#9660;</td>';
-      html+='<td>'+(o.orario||'-')+'</td>';
-      html+='<td><strong>'+(o.nome||'-')+'</strong></td>';
-      html+='<td>'+(o.numero_telefono||'-')+'</td>';
-      html+='<td>&#127958; '+(o.spiaggia||'-')+'</td>';
-      html+='<td style="color:#718096;font-size:.85rem">'+nPiatti+' voci</td>';
+    lista.forEach(function(o){
+      var nP=(o.piatti&&o.piatti.length)||0;
+      var sid=o.id.replace(/[^a-zA-Z0-9]/g,'_');
+      var nomeSafe=(o.nome||'').replace(/'/g,"\'");
+      html+='<tr class="order-row" onclick="toggleDetail(''+sid+'')">';
+      html+='<td style="color:#a0aec0">&#9660;</td><td>'+(o.orario||'-')+'</td>';
+      html+='<td><strong>'+(o.nome||'-')+'</strong></td><td>'+(o.numero_telefono||'-')+'</td>';
+      html+='<td>&#127958; '+(o.spiaggia||'-')+'</td><td style="color:#718096;font-size:.85rem">'+nP+' voci</td>';
       html+='<td><span class="totale-badge">'+(o.totale||'-')+'</span></td>';
-      html+='<td><button class="delete-btn" onclick="event.stopPropagation();openModal(''+o.id+'',''+((o.nome||'').replace(/'/g,"\'"))+'')" title="Elimina">✕</button></td>';
-      html+='</tr>';
-      html+='<tr class="detail-row" id="detail-'+safeId+'"><td colspan="8">';
-      if(nPiatti>0){
-        html+='<table class="piatti-table"><thead><tr><th>Qt.</th><th>Piatto</th><th>Varianti/Note</th><th>Prezzo unit.</th></tr></thead><tbody>';
-        (o.piatti||[]).forEach(p=>{html+='<tr><td><strong>'+p.quantita+'x</strong></td><td>'+p.descrizione+'</td><td><span class="varianti-badge">'+(p.varianti||'—')+'</span></td><td>'+(p.prezzo||'-')+'</td></tr>'});
+      html+='<td><button class="delete-btn" onclick="event.stopPropagation();openModal(''+o.id+'',''+nomeSafe+'')" title="Elimina">&#10005;</button></td></tr>';
+      html+='<tr class="detail-row" id="d-'+sid+'"><td colspan="8">';
+      if(nP>0){
+        html+='<table class="piatti-table"><thead><tr><th>Qt.</th><th>Piatto</th><th>Note</th><th>Prezzo</th></tr></thead><tbody>';
+        o.piatti.forEach(function(p){html+='<tr><td><b>'+p.quantita+'x</b></td><td>'+p.descrizione+'</td><td style="color:#718096;font-size:.8rem">'+(p.varianti||'—')+'</td><td>'+(p.prezzo||'-')+'</td></tr>'});
         html+='</tbody></table>';
-      }else{html+='<div class="piatti-empty">Nessun dettaglio piatti per questo ordine.</div>'}
+      }else html+='<div class="piatti-empty">Nessun dettaglio piatti.</div>';
       html+='</td></tr>';
     });
     html+='</tbody></table></div>';
