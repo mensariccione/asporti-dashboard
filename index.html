@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Asporti - Spiagge 2026</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c}
+header{background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:white;padding:20px 30px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header h1{font-size:1.6rem}
+header span{font-size:.9rem;opacity:.8}
+.container{max-width:1100px;margin:30px auto;padding:0 20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px}
+.stat-card{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:5px solid #2d6a9f}
+.stat-card .label{font-size:.8rem;color:#718096;text-transform:uppercase;letter-spacing:.05em}
+.stat-card .value{font-size:2rem;font-weight:700;color:#1e3a5f;margin-top:4px}
+.filters{background:white;border-radius:12px;padding:16px 20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.filters label{font-size:.85rem;color:#4a5568;font-weight:600}
+.filters input[type=date]{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.9rem}
+.filters button{padding:8px 18px;background:#2d6a9f;color:white;border:none;border-radius:8px;cursor:pointer;font-size:.9rem}
+.filters button:hover{background:#1e3a5f}
+.filters button.reset{background:#e2e8f0;color:#4a5568}
+.day-group{margin-bottom:28px}
+.day-header{background:#1e3a5f;color:white;padding:10px 18px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center}
+.day-header h2{font-size:1rem}
+.day-header .day-total{font-size:.9rem;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px}
+.orders-table{width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07);border-radius:0 0 10px 10px;overflow:hidden}
+.orders-table th{background:#edf2f7;padding:10px 14px;text-align:left;font-size:.8rem;color:#4a5568;text-transform:uppercase;letter-spacing:.05em}
+.orders-table td{padding:12px 14px;font-size:.9rem;border-bottom:1px solid #f7fafc}
+.orders-table tr:last-child td{border-bottom:none}
+.orders-table tr:hover td{background:#f7fafc}
+.totale-badge{background:#c6f6d5;color:#276749;padding:3px 10px;border-radius:20px;font-weight:600;font-size:.85rem}
+.empty{text-align:center;padding:60px;color:#a0aec0}
+.loading{text-align:center;padding:60px;color:#a0aec0;font-size:1.1rem}
+.refresh-btn{position:fixed;bottom:24px;right:24px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:14px 22px;cursor:pointer;font-size:1rem;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.refresh-btn:hover{background:#1e3a5f}
+@media(max-width:600px){.orders-table{font-size:.8rem}.orders-table th,.orders-table td{padding:8px 10px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>&#127958; Dashboard Asporti</h1>
+  <span id="last-update">Caricamento...</span>
+</header>
+<div class="container">
+  <div class="stats">
+    <div class="stat-card"><div class="label">Ordini Oggi</div><div class="value" id="stat-oggi">-</div></div>
+    <div class="stat-card"><div class="label">Totale Oggi</div><div class="value" id="stat-tot-oggi">-</div></div>
+    <div class="stat-card"><div class="label">Ordini Totali</div><div class="value" id="stat-totali">-</div></div>
+    <div class="stat-card"><div class="label">Giorni Attivi</div><div class="value" id="stat-giorni">-</div></div>
+  </div>
+  <div class="filters">
+    <label>Filtra per data:</label>
+    <input type="date" id="filter-from">
+    <span>&#8594;</span>
+    <input type="date" id="filter-to">
+    <button onclick="applyFilter()">Filtra</button>
+    <button class="reset" onclick="resetFilter()">Tutti</button>
+  </div>
+  <div id="content"><div class="loading">&#9203; Caricamento ordini...</div></div>
+</div>
+<button class="refresh-btn" onclick="loadData()">&#128260; Aggiorna</button>
+<script>
+const firebaseConfig={apiKey:"AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q",authDomain:"spiagge2026.firebaseapp.com",projectId:"spiagge2026",storageBucket:"spiagge2026.firebasestorage.app",messagingSenderId:"1062182647783",appId:"1:1062182647783:web:2e469c901b9c92ebe52f42"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+let allOrdini=[],filterFrom=null,filterTo=null;
+function parseEuro(s){if(!s)return 0;return parseFloat(s.replace(/[^0-9,]/g,'').replace(',','.'))||0}
+function formatEuro(v){return v.toFixed(2).replace('.',',')+" €"}
+function parseDateIT(s){if(!s)return null;const[d,m,y]=s.split('/');return new Date(y,m-1,d)}
+async function loadData(){
+  document.getElementById('last-update').textContent='Aggiornamento...';
+  try{
+    const snap=await db.collection('asporti').orderBy('timestamp','desc').get();
+    allOrdini=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAll();
+    document.getElementById('last-update').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
+  }catch(e){document.getElementById('content').innerHTML='<div class="empty"><p>&#9888;&#65039; Errore: '+e.message+'</p></div>'}
+}
+function applyFilter(){filterFrom=document.getElementById('filter-from').value;filterTo=document.getElementById('filter-to').value;renderAll()}
+function resetFilter(){filterFrom=null;filterTo=null;document.getElementById('filter-from').value='';document.getElementById('filter-to').value='';renderAll()}
+function renderAll(){
+  let ordini=[...allOrdini];
+  if(filterFrom||filterTo){ordini=ordini.filter(o=>{const d=parseDateIT(o.data_giorno);if(!d)return true;if(filterFrom&&d<new Date(filterFrom))return false;if(filterTo&&d>new Date(filterTo))return false;return true})}
+  const oggi=new Date().toLocaleDateString('it-IT');
+  const ordiniOggi=allOrdini.filter(o=>o.data_giorno===oggi);
+  const totOggi=ordiniOggi.reduce((s,o)=>s+parseEuro(o.totale),0);
+  const giorniUnici=new Set(allOrdini.map(o=>o.data_giorno)).size;
+  document.getElementById('stat-oggi').textContent=ordiniOggi.length;
+  document.getElementById('stat-tot-oggi').textContent=formatEuro(totOggi);
+  document.getElementById('stat-totali').textContent=allOrdini.length;
+  document.getElementById('stat-giorni').textContent=giorniUnici;
+  if(!ordini.length){document.getElementById('content').innerHTML='<div class="empty"><p>Nessun ordine trovato.</p></div>';return}
+  const gruppi={};
+  ordini.forEach(o=>{if(!gruppi[o.data_giorno])gruppi[o.data_giorno]=[];gruppi[o.data_giorno].push(o)});
+  const giorni=Object.keys(gruppi).sort((a,b)=>parseDateIT(b)-parseDateIT(a));
+  let html='';
+  giorni.forEach(g=>{
+    const lista=gruppi[g];
+    const tot=lista.reduce((s,o)=>s+parseEuro(o.totale),0);
+    html+='<div class="day-group"><div class="day-header"><h2>&#128197; '+g+'</h2><span class="day-total">'+lista.length+' ordini &middot; '+formatEuro(tot)+'</span></div><table class="orders-table"><thead><tr><th>Orario</th><th>Nome</th><th>Telefono</th><th>Spiaggia</th><th>Salvato alle</th><th>Totale</th></tr></thead><tbody>';
+    lista.forEach(o=>{html+='<tr><td>'+(o.orario||'-')+'</td><td><strong>'+(o.nome||'-')+'</strong></td><td>'+(o.numero_telefono||'-')+'</td><td>&#127958; '+(o.spiaggia||'-')+'</td><td style="color:#718096;font-size:.8rem">'+(o.timestamp||'-')+'</td><td><span class="totale-badge">'+(o.totale||'-')+'</span></td></tr>'});
+    html+='</tbody></table></div>';
+  });
+  document.getElementById('content').innerHTML=html;
+}
+loadData();
+setInterval(loadData,60000);
+</script>
+</body>
+</html>
