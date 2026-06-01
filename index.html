@@ -6,35 +6,35 @@
 <title>Dashboard Asporti</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c}
-header{background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:white;padding:20px 30px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-header h1{font-size:1.6rem}
-header span{font-size:.9rem;opacity:.8}
-.container{max-width:1100px;margin:30px auto;padding:0 20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px}
-.stat-card{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:5px solid #2d6a9f}
-.stat-card .label{font-size:.8rem;color:#718096;text-transform:uppercase;letter-spacing:.05em}
-.stat-card .value{font-size:2rem;font-weight:700;color:#1e3a5f;margin-top:4px}
-.filters{background:white;border-radius:12px;padding:16px 20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.filters label{font-size:.85rem;color:#4a5568;font-weight:600}
-.filters input[type=date]{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.9rem}
-.filters button{padding:8px 18px;background:#2d6a9f;color:white;border:none;border-radius:8px;cursor:pointer;font-size:.9rem}
-.filters button:hover{background:#1e3a5f}
-.filters button.reset{background:#e2e8f0;color:#4a5568}
-.day-group{margin-bottom:28px}
-.day-header{background:#1e3a5f;color:white;padding:10px 18px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center}
-.day-header h2{font-size:1rem}
-.day-header .day-total{font-size:.9rem;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px}
-.orders-table{width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07);border-radius:0 0 10px 10px;overflow:hidden}
-.orders-table th{background:#edf2f7;padding:10px 14px;text-align:left;font-size:.8rem;color:#4a5568;text-transform:uppercase;letter-spacing:.05em}
-.orders-table td{padding:12px 14px;font-size:.9rem;border-bottom:1px solid #f7fafc;vertical-align:middle}
-.orders-table tr.order-row{cursor:pointer}
-.orders-table tr.order-row:hover td{background:#ebf4ff}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748}
+header{background:#1e3a5f;color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
+#last-update{font-size:.8rem;opacity:.7}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.stat-card .label{font-size:.75rem;text-transform:uppercase;color:#718096;letter-spacing:.05em;margin-bottom:6px}
+.stat-card .value{font-size:2rem;font-weight:700;color:#1e3a5f}
+.filter-bar{background:white;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.filter-bar label{font-size:.9rem;color:#4a5568}
+.filter-bar input[type=date]{padding:6px 10px;border:1px solid #cbd5e0;border-radius:8px;font-size:.9rem}
+.btn{padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600}
+.btn-primary{background:#2d6a9f;color:white}.btn-primary:hover{background:#1e4f7a}
+.btn-secondary{background:#e2e8f0;color:#4a5568}.btn-secondary:hover{background:#cbd5e0}
+.section{background:white;border-radius:12px;padding:0;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
+.section-header{background:#1e3a5f;color:white;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.section-header h2{font-size:1rem;font-weight:600}
+.section-header span{font-size:.85rem;opacity:.8}
+.orders-table{width:100%;border-collapse:collapse}
+.orders-table th{background:#edf2f7;padding:10px 16px;text-align:left;font-size:.75rem;color:#4a5568;text-transform:uppercase}
+.orders-table td{padding:12px 16px;font-size:.9rem;border-bottom:1px solid #edf2f7;cursor:pointer}
 .orders-table tr:last-child td{border-bottom:none}
-.totale-badge{background:#c6f6d5;color:#276749;padding:3px 10px;border-radius:20px;font-weight:600;font-size:.85rem}
-.delete-btn{background:none;border:none;cursor:pointer;color:#fc8181;font-size:1.2rem;padding:2px 8px;border-radius:6px;line-height:1}
-.delete-btn:hover{background:#fff5f5;color:#e53e3e}
-.detail-row{display:none;background:#f7fafc}
+.orders-table tr.data-row:hover td{background:#f7fafc}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:600}
+.badge-green{background:#c6f6d5;color:#276749}
+.badge-blue{background:#bee3f8;color:#2a69ac}
+.badge-orange{background:#feebc8;color:#c05621}
+.detail-row{display:none}
 .detail-row.open{display:table-row}
 .detail-row td{padding:0!important;border-bottom:1px solid #e2e8f0}
 .piatti-table{width:100%;border-collapse:collapse}
@@ -42,281 +42,378 @@ header span{font-size:.9rem;opacity:.8}
 .piatti-table td{padding:8px 14px;font-size:.85rem;border-bottom:1px solid #edf2f7}
 .piatti-table tr:last-child td{border-bottom:none}
 .piatti-empty{padding:12px 14px;color:#a0aec0;font-size:.85rem;font-style:italic}
+/* Report tables */
+.report-table{width:100%;border-collapse:collapse}
+.report-table th{background:#edf2f7;padding:10px 16px;text-align:left;font-size:.75rem;color:#4a5568;text-transform:uppercase}
+.report-table td{padding:11px 16px;font-size:.9rem;border-bottom:1px solid #edf2f7}
+.report-table tr:last-child td{border-bottom:none}
+.report-table tr:hover td{background:#f7fafc}
+.rank{font-weight:700;color:#2d6a9f;width:36px;display:inline-block}
+.bar-wrap{background:#edf2f7;border-radius:20px;height:8px;margin-top:4px;min-width:80px;max-width:200px}
+.bar-fill{background:#2d6a9f;border-radius:20px;height:8px;transition:width .3s}
+.reports-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;margin-bottom:24px}
 .empty{text-align:center;padding:60px;color:#a0aec0}
 .loading{text-align:center;padding:60px;color:#a0aec0;font-size:1.1rem}
 .err{text-align:center;padding:32px;color:#e53e3e;background:#fff5f5;border-radius:12px;margin:20px 0;font-size:.9rem}
 .refresh-btn{position:fixed;bottom:24px;right:24px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:14px 22px;cursor:pointer;font-size:1rem;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .refresh-btn:hover{background:#1e3a5f}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:white;border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2);text-align:center}
-.modal h3{font-size:1.2rem;color:#1e3a5f;margin-bottom:10px}
-.modal p{color:#4a5568;font-size:.95rem;margin-bottom:20px}
-.modal .modal-name{font-weight:700;color:#1e3a5f}
-.modal-btns{display:flex;gap:12px;justify-content:center}
-.modal-btns button{padding:10px 24px;border:none;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600}
-.btn-cancel{background:#e2e8f0;color:#4a5568}
-.btn-delete{background:#fc8181;color:white}
-.btn-delete:hover{background:#e53e3e}
+.modal{background:white;border-radius:16px;padding:28px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.modal h3{font-size:1.1rem;margin-bottom:8px;color:#1e3a5f}
+.modal p{color:#718096;font-size:.9rem;margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
 </style>
 </head>
 <body>
 <header>
-  <h1>&#127958; Dashboard Asporti</h1>
-  <span id="last-update">Caricamento...</span>
+  <h1>🏖 Dashboard Asporti</h1>
+  <span id="last-update"></span>
 </header>
 <div class="container">
   <div class="stats">
     <div class="stat-card"><div class="label">Ordini Oggi</div><div class="value" id="stat-oggi">-</div></div>
-    <div class="stat-card"><div class="label">Totale Oggi</div><div class="value" id="stat-tot-oggi">-</div></div>
-    <div class="stat-card"><div class="label">Ordini Totali</div><div class="value" id="stat-totali">-</div></div>
+    <div class="stat-card"><div class="label">Totale Oggi</div><div class="value" id="stat-totale-oggi">-</div></div>
+    <div class="stat-card"><div class="label">Ordini Totali</div><div class="value" id="stat-totale">-</div></div>
     <div class="stat-card"><div class="label">Giorni Attivi</div><div class="value" id="stat-giorni">-</div></div>
   </div>
-  <div class="filters">
+
+  <div class="filter-bar">
     <label>Filtra:</label>
-    <input type="date" id="filter-from">
-    <span>&#8594;</span>
-    <input type="date" id="filter-to">
-    <button onclick="applyFilter()">Filtra</button>
-    <button class="reset" onclick="resetFilter()">Tutti</button>
+    <input type="date" id="from-date"> → <input type="date" id="to-date">
+    <button class="btn btn-primary" onclick="applyFilter()">Filtra</button>
+    <button class="btn btn-secondary" onclick="resetFilter()">Tutti</button>
   </div>
-  <div id="content"><div class="loading">&#9203; Caricamento...</div></div>
-</div>
-<button class="refresh-btn" onclick="loadData()">&#128260; Aggiorna</button>
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h3>&#128465; Cancella ordine</h3>
-    <p>Eliminare l'ordine di <span class="modal-name" id="modal-name"></span>?<br><small>Azione irreversibile.</small></p>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">Annulla</button>
-      <button class="btn-delete" onclick="confirmDelete()">Elimina</button>
+
+  <!-- Ordini -->
+  <div class="section" id="orders-section">
+    <div class="loading">Caricamento...</div>
+  </div>
+
+  <!-- Report -->
+  <div class="reports-grid">
+    <!-- Articoli più venduti -->
+    <div class="section">
+      <div class="section-header"><h2>🍽 Articoli più venduti</h2><span id="report-articoli-sub"></span></div>
+      <div id="report-articoli"><div class="loading">...</div></div>
+    </div>
+    <!-- Top clienti -->
+    <div class="section">
+      <div class="section-header"><h2>👤 Top clienti per spesa</h2><span id="report-clienti-sub"></span></div>
+      <div id="report-clienti"><div class="loading">...</div></div>
+    </div>
+    <!-- Spiagge più attive -->
+    <div class="section">
+      <div class="section-header"><h2>⛱ Spiagge più attive</h2><span id="report-spiagge-sub"></span></div>
+      <div id="report-spiagge"><div class="loading">...</div></div>
     </div>
   </div>
 </div>
+
+<button class="refresh-btn" onclick="loadData()">🔄 Aggiorna</button>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3>🗑 Cancella ordine</h3>
+    <p>Eliminare l'ordine di <span id="modal-nome"></span>?<br><small>Azione irreversibile.</small></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+      <button class="btn" style="background:#e53e3e;color:white" onclick="confirmDelete()">Elimina</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var APIKEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
-var PROJ = "spiagge2026";
-var BASE = "https://firestore.googleapis.com/v1/projects/" + PROJ + "/databases/(default)/documents";
+var PROJ  = "spiagge2026";
+var BASE  = "https://firestore.googleapis.com/v1/projects/" + PROJ + "/databases/(default)/documents/";
+
 var allOrdini = [];
 var filterFrom = null;
-var filterTo = null;
-var pendingDeleteId = null;
+var filterTo   = null;
+var deleteId   = null;
+var deleteNome = null;
 
+function normTel(t) {
+  return (t || '').replace(/\D/g, '').slice(-10);
+}
 function parseEuro(s) {
   if (!s) return 0;
-  return parseFloat(s.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+  var n = parseFloat(String(s).replace(/[^\d,.-]/g,'').replace(',','.'));
+  return isNaN(n) ? 0 : n;
 }
-
-function formatEuro(v) {
-  return v.toFixed(2).replace(".", ",") + " €";
+function formatEuro(n) {
+  return n.toFixed(2).replace('.',',') + ' €';
 }
-
 function parseDate(s) {
   if (!s) return null;
-  var p = s.split("/");
-  if (p.length !== 3) return null;
-  return new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+  var p = s.split('/');
+  if (p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+  return new Date(s);
 }
-
 function getStr(fields, key) {
   return (fields[key] && fields[key].stringValue) || "";
 }
-
 function getArr(fields, key) {
   return (fields[key] && fields[key].arrayValue && fields[key].arrayValue.values) || [];
 }
-
 function escapeHtml(s) {
-  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function loadData() {
-  document.getElementById("last-update").textContent = "Aggiornamento...";
-  var url = BASE + "/asporti?key=" + APIKEY + "&pageSize=300";
-  fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
+  document.getElementById('orders-section').innerHTML = '<div class="loading">Caricamento...</div>';
+  fetch(BASE + 'asporti?key=' + APIKEY + '&pageSize=300')
+    .then(function(r){ return r.json(); })
     .then(function(data) {
       var docs = data.documents || [];
       allOrdini = docs.map(function(doc) {
         var f = doc.fields || {};
-        var id = doc.name.split("/").pop();
-        var pArr = getArr(f, "piatti");
+        var id = doc.name.split('/').pop();
+        var pArr = getArr(f, 'piatti');
         var piatti = pArr.map(function(p) {
           var m = (p.mapValue && p.mapValue.fields) || {};
           return {
-            quantita: (m.quantita && (m.quantita.integerValue || m.quantita.stringValue)) || "1",
-            descrizione: (m.descrizione && m.descrizione.stringValue) || "",
-            prezzo: (m.prezzo && m.prezzo.stringValue) || "",
-            varianti: (m.varianti && m.varianti.stringValue) || ""
+            quantita:    getStr(m,'quantita') || '1',
+            descrizione: getStr(m,'descrizione'),
+            prezzo:      getStr(m,'prezzo'),
+            varianti:    getStr(m,'varianti')
           };
-        }).filter(function(p) { return p.descrizione; });
+        }).filter(function(p){ return p.descrizione; });
         return {
-          id: id,
-          data_giorno: getStr(f, "data_giorno"),
-          timestamp: getStr(f, "timestamp"),
-          nome: getStr(f, "nome"),
-          numero_telefono: getStr(f, "numero_telefono"),
-          spiaggia: getStr(f, "spiaggia"),
-          orario: getStr(f, "orario"),
-          totale: getStr(f, "totale"),
-          piatti: piatti
+          id:         id,
+          nome:       getStr(f,'nome'),
+          telefono:   normTel(getStr(f,'numero_telefono')),
+          spiaggia:   getStr(f,'spiaggia'),
+          orario:     getStr(f,'orario'),
+          totale:     getStr(f,'totale'),
+          totaleNum:  parseEuro(getStr(f,'totale')),
+          data:       getStr(f,'data_giorno'),
+          timestamp:  getStr(f,'timestamp'),
+          piatti:     piatti
         };
       });
-      allOrdini.sort(function(a, b) {
-        return b.timestamp.localeCompare(a.timestamp);
+      allOrdini.sort(function(a,b){
+        var da = parseDate(a.data), db = parseDate(b.data);
+        if (!da || !db) return 0;
+        if (da > db) return -1; if (da < db) return 1;
+        return (b.orario||'').localeCompare(a.orario||'');
       });
+      document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
       renderAll();
-      document.getElementById("last-update").textContent = "Aggiornato: " + new Date().toLocaleString("it-IT");
     })
-    .catch(function(e) {
-      document.getElementById("content").innerHTML = "<div class=\"err\"><b>Errore:</b><br>" + e.message + "</div>";
-      document.getElementById("last-update").textContent = "Errore";
+    .catch(function(e){
+      document.getElementById('orders-section').innerHTML = '<div class="err">Errore caricamento: ' + e.message + '</div>';
     });
 }
 
 function applyFilter() {
-  filterFrom = document.getElementById("filter-from").value;
-  filterTo = document.getElementById("filter-to").value;
+  filterFrom = document.getElementById('from-date').value || null;
+  filterTo   = document.getElementById('to-date').value || null;
   renderAll();
 }
-
 function resetFilter() {
-  filterFrom = null;
-  filterTo = null;
-  document.getElementById("filter-from").value = "";
-  document.getElementById("filter-to").value = "";
+  filterFrom = null; filterTo = null;
+  document.getElementById('from-date').value = '';
+  document.getElementById('to-date').value = '';
   renderAll();
 }
 
-function toggleDetail(id) {
-  var r = document.getElementById("d-" + id);
-  if (r) r.classList.toggle("open");
-}
-
-function openModal(id, nome) {
-  pendingDeleteId = id;
-  document.getElementById("modal-name").textContent = nome || "questo ordine";
-  document.getElementById("modal").classList.add("open");
-}
-
-function closeModal() {
-  pendingDeleteId = null;
-  document.getElementById("modal").classList.remove("open");
-}
-
-function confirmDelete() {
-  if (!pendingDeleteId) return;
-  var url = BASE + "/asporti/" + pendingDeleteId + "?key=" + APIKEY;
-  fetch(url, { method: "DELETE" })
-    .then(function(r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      closeModal();
-      loadData();
-    })
-    .catch(function(e) { alert("Errore: " + e.message); });
-}
-
-document.addEventListener("click", function(e) {
-  var btn = e.target.closest(".delete-btn");
-  if (btn) {
-    e.stopPropagation();
-    var id = btn.getAttribute("data-id");
-    var nome = btn.getAttribute("data-nome");
-    openModal(id, nome);
-    return;
-  }
-  var row = e.target.closest(".order-row");
-  if (row) {
-    var id = row.getAttribute("data-id");
-    toggleDetail(id);
-  }
-});
-
-function renderAll() {
+function filteredOrdini() {
   var ordini = allOrdini.slice();
   if (filterFrom || filterTo) {
+    var from = filterFrom ? new Date(filterFrom) : null;
+    var to   = filterTo   ? new Date(filterTo)   : null;
     ordini = ordini.filter(function(o) {
-      var d = parseDate(o.data_giorno);
+      var d = parseDate(o.data);
       if (!d) return true;
-      if (filterFrom) {
-        var fp = filterFrom.split("-");
-        var fromD = new Date(parseInt(fp[0],10), parseInt(fp[1],10)-1, parseInt(fp[2],10));
-        if (d < fromD) return false;
-      }
-      if (filterTo) {
-        var tp = filterTo.split("-");
-        var toD = new Date(parseInt(tp[0],10), parseInt(tp[1],10)-1, parseInt(tp[2],10));
-        if (d > toD) return false;
-      }
+      if (from && d < from) return false;
+      if (to   && d > to)   return false;
       return true;
     });
   }
+  return ordini;
+}
 
-  var today = new Date();
-  var todayStr = today.getDate().toString().padStart(2,"0") + "/" + (today.getMonth()+1).toString().padStart(2,"0") + "/" + today.getFullYear();
-  var oggiOrdini = 0;
-  var oggiTot = 0;
-  var giorniSet = {};
-  allOrdini.forEach(function(o) {
-    if (o.data_giorno === todayStr) { oggiOrdini++; oggiTot += parseEuro(o.totale); }
-    if (o.data_giorno) giorniSet[o.data_giorno] = true;
-  });
-  document.getElementById("stat-oggi").textContent = oggiOrdini;
-  document.getElementById("stat-tot-oggi").textContent = formatEuro(oggiTot);
-  document.getElementById("stat-totali").textContent = allOrdini.length;
-  document.getElementById("stat-giorni").textContent = Object.keys(giorniSet).length;
+function toggleDetail(id) {
+  var row = document.getElementById('detail-' + id);
+  if (row) row.classList.toggle('open');
+}
 
-  if (ordini.length === 0) {
-    document.getElementById("content").innerHTML = "<div class=\"empty\">Nessun ordine trovato.</div>";
-    return;
-  }
+function openModal(id, nome) {
+  deleteId   = id;
+  deleteNome = nome;
+  document.getElementById('modal-nome').textContent = nome || 'questo ordine';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  deleteId = null; deleteNome = null;
+}
+function confirmDelete() {
+  if (!deleteId) return;
+  fetch(BASE + 'asporti/' + deleteId + '?key=' + APIKEY, { method: 'DELETE' })
+    .then(function(){ closeModal(); loadData(); })
+    .catch(function(e){ alert('Errore eliminazione: ' + e.message); });
+}
 
+function renderAll() {
+  var ordini = filteredOrdini();
+
+  // --- Statistiche ---
+  var oggi = new Date().toLocaleDateString('it-IT');
+  var ordiniOggi = ordini.filter(function(o){ return o.data === oggi; });
+  var totOggi = ordiniOggi.reduce(function(s,o){ return s + o.totaleNum; }, 0);
+  var giorni = new Set(ordini.map(function(o){ return o.data; })).size;
+  document.getElementById('stat-oggi').textContent = ordiniOggi.length;
+  document.getElementById('stat-totale-oggi').textContent = formatEuro(totOggi);
+  document.getElementById('stat-totale').textContent = ordini.length;
+  document.getElementById('stat-giorni').textContent = giorni;
+
+  // --- Ordini per giorno ---
   var byDay = {};
-  var dayOrder = [];
   ordini.forEach(function(o) {
-    var day = o.data_giorno || "Senza data";
-    if (!byDay[day]) { byDay[day] = []; dayOrder.push(day); }
-    byDay[day].push(o);
+    if (!byDay[o.data]) byDay[o.data] = [];
+    byDay[o.data].push(o);
+  });
+  var days = Object.keys(byDay).sort(function(a,b){
+    var da=parseDate(a), db=parseDate(b);
+    return da>db?-1:da<db?1:0;
   });
 
-  var html2 = "";
-  dayOrder.forEach(function(day) {
-    var list = byDay[day];
-    var dayTot = 0;
-    list.forEach(function(o) { dayTot += parseEuro(o.totale); });
-    html2 += "<div class=\"day-group\">";
-    html2 += "<div class=\"day-header\"><h2>" + escapeHtml(day) + "</h2><span class=\"day-total\">Totale: " + formatEuro(dayTot) + "</span></div>";
-    html2 += "<table class=\"orders-table\"><thead><tr><th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th></tr></thead><tbody>";
-    list.forEach(function(o) {
-      html2 += "<tr class=\"order-row\" data-id=\"" + o.id + "\">";
-      html2 += "<td>" + escapeHtml(o.orario || "-") + "</td>";
-      html2 += "<td>" + escapeHtml(o.nome || "-") + "</td>";
-      html2 += "<td>" + escapeHtml(o.numero_telefono || "-") + "</td>";
-      html2 += "<td>" + escapeHtml(o.spiaggia || "-") + "</td>";
-      html2 += "<td><span class=\"totale-badge\">" + escapeHtml(o.totale || "-") + "</span></td>";
-      html2 += "<td><button class=\"delete-btn\" data-id=\"" + o.id + "\" data-nome=\"" + escapeHtml(o.nome) + "\">&#10005;</button></td>";
-      html2 += "</tr>";
-      html2 += "<tr class=\"detail-row\" id=\"d-" + o.id + "\"><td colspan=\"6\">";
-      if (o.piatti && o.piatti.length > 0) {
-        html2 += "<table class=\"piatti-table\"><thead><tr><th>Qt</th><th>Descrizione</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>";
-        o.piatti.forEach(function(p) {
-          html2 += "<tr><td>" + escapeHtml(p.quantita) + "</td><td>" + escapeHtml(p.descrizione) + "</td><td>" + escapeHtml(p.prezzo) + "</td><td>" + escapeHtml(p.varianti || "-") + "</td></tr>";
-        });
-        html2 += "</tbody></table>";
-      } else {
-        html2 += "<div class=\"piatti-empty\">Nessun piatto registrato per questo ordine.</div>";
-      }
-      html2 += "</td></tr>";
+  var html2 = '';
+  if (days.length === 0) {
+    html2 = '<div class="empty">Nessun ordine trovato</div>';
+  } else {
+    days.forEach(function(day) {
+      var dayOrdini = byDay[day];
+      var dayTot = dayOrdini.reduce(function(s,o){ return s+o.totaleNum; },0);
+      html2 += '<div class="section-header" style="background:#2d6a9f;margin-top:0">';
+      html2 += '<h2>' + escapeHtml(day) + '</h2>';
+      html2 += '<span>Totale: ' + formatEuro(dayTot) + '</span></div>';
+      html2 += '<table class="orders-table"><thead><tr>';
+      html2 += '<th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th>';
+      html2 += '</tr></thead><tbody>';
+      dayOrdini.forEach(function(o) {
+        html2 += '<tr class="data-row" onclick="toggleDetail(\'' + o.id + '\')">';
+        html2 += '<td>' + escapeHtml(o.orario||'-') + '</td>';
+        html2 += '<td>' + escapeHtml(o.nome||'-') + '</td>';
+        html2 += '<td>' + escapeHtml(o.telefono||'-') + '</td>';
+        html2 += '<td>' + escapeHtml(o.spiaggia||'-') + '</td>';
+        html2 += '<td><span class="badge badge-green">' + escapeHtml(o.totale||'0,00 €') + '</span></td>';
+        html2 += '<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px;font-size:.8rem" onclick="event.stopPropagation();openModal(\'' + o.id + '\',\'' + escapeHtml(o.nome) + '\')">✕</button></td>';
+        html2 += '</tr>';
+        // Dettaglio piatti
+        html2 += '<tr class="detail-row" id="detail-' + o.id + '">';
+        html2 += '<td colspan="6">';
+        if (o.piatti && o.piatti.length > 0) {
+          html2 += '<table class="piatti-table"><thead><tr><th>QT</th><th>Descrizione</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>';
+          o.piatti.forEach(function(p) {
+            html2 += '<tr><td>' + escapeHtml(p.quantita) + '</td><td>' + escapeHtml(p.descrizione) + '</td><td>' + escapeHtml(p.prezzo) + '</td><td>' + escapeHtml(p.varianti||'-') + '</td></tr>';
+          });
+          html2 += '</tbody></table>';
+        } else {
+          html2 += '<div class="piatti-empty">Nessun piatto registrato per questo ordine.</div>';
+        }
+        html2 += '</td></tr>';
+      });
+      html2 += '</tbody></table>';
     });
-    html2 += "</tbody></table></div>";
+  }
+  document.getElementById('orders-section').innerHTML = html2;
+
+  // --- Report articoli più venduti ---
+  var artMap = {};
+  ordini.forEach(function(o) {
+    (o.piatti||[]).forEach(function(p) {
+      if (!p.descrizione) return;
+      var qty = parseInt(p.quantita||'1',10)||1;
+      if (!artMap[p.descrizione]) artMap[p.descrizione] = {qty:0, rev:0};
+      artMap[p.descrizione].qty += qty;
+      artMap[p.descrizione].rev += parseEuro(p.prezzo) * qty;
+    });
   });
-  document.getElementById("content").innerHTML = html2;
+  var artList = Object.keys(artMap).map(function(k){ return {nome:k, qty:artMap[k].qty, rev:artMap[k].rev}; });
+  artList.sort(function(a,b){ return b.qty - a.qty; });
+  var maxQty = artList[0] ? artList[0].qty : 1;
+  var artHtml = '';
+  if (artList.length === 0) {
+    artHtml = '<div class="empty" style="padding:30px">Nessun dato</div>';
+  } else {
+    artHtml = '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>Qtà</th><th>Incasso</th></tr></thead><tbody>';
+    artList.slice(0,15).forEach(function(a, i) {
+      var pct = Math.round((a.qty / maxQty) * 100);
+      artHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
+      artHtml += '<td>' + escapeHtml(a.nome) + '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%"></div></div></td>';
+      artHtml += '<td><span class="badge badge-blue">' + a.qty + '</span></td>';
+      artHtml += '<td>' + formatEuro(a.rev) + '</td></tr>';
+    });
+    artHtml += '</tbody></table>';
+  }
+  document.getElementById('report-articoli').innerHTML = artHtml;
+  document.getElementById('report-articoli-sub').textContent = artList.length + ' articoli distinti';
+
+  // --- Report top clienti ---
+  var telMap = {};
+  ordini.forEach(function(o) {
+    var tel = o.telefono || 'sconosciuto';
+    if (!telMap[tel]) telMap[tel] = {nome: o.nome||'', tel: tel, spesa:0, ordini:0};
+    if (o.nome && !telMap[tel].nome) telMap[tel].nome = o.nome;
+    telMap[tel].spesa  += o.totaleNum;
+    telMap[tel].ordini += 1;
+  });
+  var telList = Object.keys(telMap).map(function(k){ return telMap[k]; });
+  telList.sort(function(a,b){ return b.spesa - a.spesa; });
+  var maxSpesa = telList[0] ? telList[0].spesa : 1;
+  var clientiHtml = '';
+  if (telList.length === 0) {
+    clientiHtml = '<div class="empty" style="padding:30px">Nessun dato</div>';
+  } else {
+    clientiHtml = '<table class="report-table"><thead><tr><th>#</th><th>Cliente</th><th>Ordini</th><th>Spesa totale</th></tr></thead><tbody>';
+    telList.slice(0,15).forEach(function(c, i) {
+      var pct = Math.round((c.spesa / maxSpesa) * 100);
+      var label = escapeHtml(c.nome||'—') + (c.tel && c.tel!=='sconosciuto' ? ' <small style="color:#718096">(' + c.tel + ')</small>' : '');
+      clientiHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
+      clientiHtml += '<td>' + label + '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%;background:#38a169"></div></div></td>';
+      clientiHtml += '<td><span class="badge badge-blue">' + c.ordini + '</span></td>';
+      clientiHtml += '<td><strong>' + formatEuro(c.spesa) + '</strong></td></tr>';
+    });
+    clientiHtml += '</tbody></table>';
+  }
+  document.getElementById('report-clienti').innerHTML = clientiHtml;
+  document.getElementById('report-clienti-sub').textContent = telList.length + ' clienti distinti';
+
+  // --- Report spiagge più attive ---
+  var spiMap = {};
+  ordini.forEach(function(o) {
+    var s = o.spiaggia || 'non specificata';
+    if (!spiMap[s]) spiMap[s] = {spiaggia:s, ordini:0, spesa:0};
+    spiMap[s].ordini += 1;
+    spiMap[s].spesa  += o.totaleNum;
+  });
+  var spiList = Object.keys(spiMap).map(function(k){ return spiMap[k]; });
+  spiList.sort(function(a,b){ return b.ordini - a.ordini; });
+  var maxOrd = spiList[0] ? spiList[0].ordini : 1;
+  var spiHtml = '';
+  if (spiList.length === 0) {
+    spiHtml = '<div class="empty" style="padding:30px">Nessun dato</div>';
+  } else {
+    spiHtml = '<table class="report-table"><thead><tr><th>#</th><th>Spiaggia</th><th>Ordini</th><th>Incasso</th></tr></thead><tbody>';
+    spiList.slice(0,15).forEach(function(s, i) {
+      var pct = Math.round((s.ordini / maxOrd) * 100);
+      spiHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
+      spiHtml += '<td>' + escapeHtml(s.spiaggia) + '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%;background:#d69e2e"></div></div></td>';
+      spiHtml += '<td><span class="badge badge-orange">' + s.ordini + '</span></td>';
+      spiHtml += '<td>' + formatEuro(s.spesa) + '</td></tr>';
+    });
+    spiHtml += '</tbody></table>';
+  }
+  document.getElementById('report-spiagge').innerHTML = spiHtml;
+  document.getElementById('report-spiagge-sub').textContent = spiList.length + ' spiagge distinte';
 }
 
 loadData();
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
