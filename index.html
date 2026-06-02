@@ -1,4 +1,16 @@
-<!DOCTYPE html>
+  // Imposta automaticamente il filtro sul giorno corrente all'apertura
+  function initTodayFilter() {
+    var todayISO = new Date().toISOString().slice(0, 10);
+    var fromEl = document.getElementById('from-date');
+    var toEl   = document.getElementById('to-date');
+    if (fromEl) fromEl.value = todayISO;
+    if (toEl)   toEl.value   = todayISO;
+    filterFrom = todayISO;
+    filterTo   = todayISO;
+    renderAll();
+  }
+
+  <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -67,7 +79,7 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 </head>
 <body>
 <header>
-  <h1>🏖 Dashboard Asporti</h1>
+  <h1>ð Dashboard Asporti</h1>
   <span id="last-update"></span>
 </header>
 <div class="container">
@@ -80,7 +92,7 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 
   <div class="filter-bar">
     <label>Filtra:</label>
-    <input type="date" id="from-date"> → <input type="date" id="to-date">
+    <input type="date" id="from-date"> â <input type="date" id="to-date">
     <button class="btn btn-primary" onclick="applyFilter()">Filtra</button>
     <button class="btn btn-secondary" onclick="resetFilter()">Tutti</button>
   </div>
@@ -92,29 +104,29 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 
   <!-- Report -->
   <div class="reports-grid">
-    <!-- Articoli più venduti -->
+    <!-- Articoli piÃ¹ venduti -->
     <div class="section">
-      <div class="section-header"><h2>🍽 Articoli più venduti</h2><span id="report-articoli-sub"></span></div>
+      <div class="section-header"><h2>ð½ Articoli piÃ¹ venduti</h2><span id="report-articoli-sub"></span></div>
       <div id="report-articoli"><div class="loading">...</div></div>
     </div>
     <!-- Top clienti -->
     <div class="section">
-      <div class="section-header"><h2>👤 Top clienti per spesa</h2><span id="report-clienti-sub"></span></div>
+      <div class="section-header"><h2>ð¤ Top clienti per spesa</h2><span id="report-clienti-sub"></span></div>
       <div id="report-clienti"><div class="loading">...</div></div>
     </div>
-    <!-- Spiagge più attive -->
+    <!-- Spiagge piÃ¹ attive -->
     <div class="section">
-      <div class="section-header"><h2>⛱ Spiagge più attive</h2><span id="report-spiagge-sub"></span></div>
+      <div class="section-header"><h2>â± Spiagge piÃ¹ attive</h2><span id="report-spiagge-sub"></span></div>
       <div id="report-spiagge"><div class="loading">...</div></div>
     </div>
   </div>
 </div>
 
-<button class="refresh-btn" onclick="loadData()">🔄 Aggiorna</button>
+<button class="refresh-btn" onclick="loadData()">ð Aggiorna</button>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <h3>🗑 Cancella ordine</h3>
+    <h3>ð Cancella ordine</h3>
     <p>Eliminare l'ordine di <span id="modal-nome"></span>?<br><small>Azione irreversibile.</small></p>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
@@ -143,7 +155,7 @@ function parseEuro(s) {
   return isNaN(n) ? 0 : n;
 }
 function formatEuro(n) {
-  return n.toFixed(2).replace('.',',') + ' €';
+  return n.toFixed(2).replace('.',',') + ' â¬';
 }
 function parseDate(s) {
   if (!s) return null;
@@ -200,7 +212,7 @@ function loadData() {
         return (b.orario||'').localeCompare(a.orario||'');
       });
       document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
-      renderAll();
+      if (!window.__filterInitialized) { initTodayFilter(); window.__filterInitialized = true; } else { renderAll(); }
     })
     .catch(function(e){
       document.getElementById('orders-section').innerHTML = '<div class="err">Errore caricamento: ' + e.message + '</div>';
@@ -276,15 +288,35 @@ function renderAll() {
   document.getElementById('stat-giorni').textContent = giorni;
 
   // --- Ordini per giorno ---
+  // Raggruppa ordini per giorno
   var byDay = {};
   ordini.forEach(function(o) {
     if (!byDay[o.data]) byDay[o.data] = [];
     byDay[o.data].push(o);
   });
-  var days = Object.keys(byDay).sort(function(a,b){
-    var da=parseDate(a), db=parseDate(b);
-    return da>db?-1:da<db?1:0;
+  var days = Object.keys(byDay).sort(function(a, b) {
+    var da = parseDate(a), db = parseDate(b);
+    return da > db ? -1 : da < db ? 1 : 0;
   });
+
+  // Fasce orarie consegne: 12:00 → 16:00, ogni 30 minuti
+  var SLOTS = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+
+  function slotKey(orario) {
+    if (!orario) return 'Altro';
+    var parts = String(orario).split(':');
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1] || '0', 10);
+    var totalMin = h * 60 + m;
+    var startMin = 12 * 60;
+    var endMin = 16 * 60 + 30;
+    if (totalMin < startMin || totalMin > endMin) return 'Altro';
+    var slotIdx = Math.floor((totalMin - startMin) / 30);
+    var slotStart = startMin + slotIdx * 30;
+    var sh = Math.floor(slotStart / 60);
+    var sm = slotStart % 60;
+    return (sh < 10 ? '0' : '') + sh + ':' + (sm < 10 ? '0' : '') + sm;
+  }
 
   var html2 = '';
   if (days.length === 0) {
@@ -292,42 +324,62 @@ function renderAll() {
   } else {
     days.forEach(function(day) {
       var dayOrdini = byDay[day];
-      var dayTot = dayOrdini.reduce(function(s,o){ return s+o.totaleNum; },0);
-      html2 += '<div class="section-header" style="background:#2d6a9f;margin-top:0">';
+      var dayTot = dayOrdini.reduce(function(s, o) { return s + o.totaleNum; }, 0);
+      html2 += '<div class="section-header" style="background:#1e3a5f;color:white;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-radius:10px 10px 0 0">';
       html2 += '<h2>' + escapeHtml(day) + '</h2>';
       html2 += '<span>Totale: ' + formatEuro(dayTot) + '</span></div>';
-      html2 += '<table class="orders-table"><thead><tr>';
-      html2 += '<th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th>';
-      html2 += '</tr></thead><tbody>';
+
+      // Raggruppa per fascia oraria
+      var bySlot = {};
       dayOrdini.forEach(function(o) {
-        html2 += '<tr class="data-row" onclick="toggleDetail(\'' + o.id + '\')">';
-        html2 += '<td>' + escapeHtml(o.orario||'-') + '</td>';
-        html2 += '<td>' + escapeHtml(o.nome||'-') + '</td>';
-        html2 += '<td>' + escapeHtml(o.telefono||'-') + '</td>';
-        html2 += '<td>' + escapeHtml(o.spiaggia||'-') + '</td>';
-        html2 += '<td><span class="badge badge-green">' + escapeHtml(o.totale||'0,00 €') + '</span></td>';
-        html2 += '<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px;font-size:.8rem" onclick="event.stopPropagation();openModal(\'' + o.id + '\',\'' + escapeHtml(o.nome) + '\')">✕</button></td>';
-        html2 += '</tr>';
-        // Dettaglio piatti
-        html2 += '<tr class="detail-row" id="detail-' + o.id + '">';
-        html2 += '<td colspan="6">';
-        if (o.piatti && o.piatti.length > 0) {
-          html2 += '<table class="piatti-table"><thead><tr><th>QT</th><th>Descrizione</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>';
-          o.piatti.forEach(function(p) {
-            html2 += '<tr><td>' + escapeHtml(p.quantita) + '</td><td>' + escapeHtml(p.descrizione) + '</td><td>' + escapeHtml(p.prezzo) + '</td><td>' + escapeHtml(p.varianti||'-') + '</td></tr>';
-          });
-          html2 += '</tbody></table>';
-        } else {
-          html2 += '<div class="piatti-empty">Nessun piatto registrato per questo ordine.</div>';
-        }
-        html2 += '</td></tr>';
+        var sk = slotKey(o.orario);
+        if (!bySlot[sk]) bySlot[sk] = [];
+        bySlot[sk].push(o);
       });
-      html2 += '</tbody></table>';
+
+      // Ordine slot: prima i SLOTS definiti, poi 'Altro'
+      var slotOrder = SLOTS.filter(function(s) { return bySlot[s] && bySlot[s].length > 0; });
+      if (bySlot['Altro'] && bySlot['Altro'].length > 0) slotOrder.push('Altro');
+
+      slotOrder.forEach(function(slot) {
+        var slotOrdini = bySlot[slot].sort(function(a, b) {
+          return String(a.orario) < String(b.orario) ? -1 : String(a.orario) > String(b.orario) ? 1 : 0;
+        });
+        var slotTot = slotOrdini.reduce(function(s, o) { return s + o.totaleNum; }, 0);
+        var slotLabel = slot === 'Altro' ? '⏰ Altro orario' : ('🚐 Partenza ' + slot);
+        html2 += '<div style="background:#e8f0fe;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid #2d6a9f;margin-top:4px">';
+        html2 += '<strong style="color:#1e3a5f;font-size:.95rem">' + slotLabel + '</strong>';
+        html2 += '<span style="color:#2d6a9f;font-weight:600">' + slotOrdini.length + ' ordini · ' + formatEuro(slotTot) + '</span></div>';
+        html2 += '<table class="orders-table"><thead><tr>';
+        html2 += '<th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th>';
+        html2 += '</tr></thead><tbody>';
+        slotOrdini.forEach(function(o) {
+          html2 += '<tr class="data-row" onclick="toggleDetail('' + escapeHtml(o.id) + '')">';
+          html2 += '<td>' + escapeHtml(o.orario || '-') + '</td>';
+          html2 += '<td>' + escapeHtml(o.nome || '-') + '</td>';
+          html2 += '<td>' + escapeHtml(o.telefono || '-') + '</td>';
+          html2 += '<td>' + escapeHtml(o.spiaggia || '-') + '</td>';
+          html2 += '<td><span class="badge badge-green">' + escapeHtml(o.totale || '0,00 €') + '</span></td>';
+          html2 += '<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();confirmDelete('' + escapeHtml(o.id) + '','' + escapeHtml(o.nome || '') + '')">&#x2715;</button></td>';
+          html2 += '</tr>';
+          if (o.piatti && o.piatti.length > 0) {
+            html2 += '<tr id="detail-' + escapeHtml(o.id) + '" class="detail-row">';
+            html2 += '<td colspan="6"><div class="detail-content"><ul style="margin:0;padding-left:20px">';
+            o.piatti.forEach(function(p) {
+              html2 += '<li><strong>' + escapeHtml(String(p.quantita || 1)) + 'x</strong> ' + escapeHtml(p.descrizione || '') +
+                (p.varianti ? ' <em style="color:#666">(' + escapeHtml(p.varianti) + ')</em>' : '') +
+                ' — ' + escapeHtml(p.prezzo || '') + '</li>';
+            });
+            html2 += '</ul></div></td></tr>';
+          }
+        });
+        html2 += '</tbody></table>';
+      });
     });
   }
   document.getElementById('orders-section').innerHTML = html2;
 
-  // --- Report articoli più venduti ---
+  // --- Report articoli piÃ¹ venduti ---
   var artMap = {};
   ordini.forEach(function(o) {
     (o.piatti||[]).forEach(function(p) {
@@ -345,7 +397,7 @@ function renderAll() {
   if (artList.length === 0) {
     artHtml = '<div class="empty" style="padding:30px">Nessun dato</div>';
   } else {
-    artHtml = '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>Qtà</th><th>Incasso</th></tr></thead><tbody>';
+    artHtml = '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>QtÃ </th><th>Incasso</th></tr></thead><tbody>';
     artList.slice(0,15).forEach(function(a, i) {
       var pct = Math.round((a.qty / maxQty) * 100);
       artHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
@@ -377,7 +429,7 @@ function renderAll() {
     clientiHtml = '<table class="report-table"><thead><tr><th>#</th><th>Cliente</th><th>Ordini</th><th>Spesa totale</th></tr></thead><tbody>';
     telList.slice(0,15).forEach(function(c, i) {
       var pct = Math.round((c.spesa / maxSpesa) * 100);
-      var label = escapeHtml(c.nome||'—') + (c.tel && c.tel!=='sconosciuto' ? ' <small style="color:#718096">(' + c.tel + ')</small>' : '');
+      var label = escapeHtml(c.nome||'â') + (c.tel && c.tel!=='sconosciuto' ? ' <small style="color:#718096">(' + c.tel + ')</small>' : '');
       clientiHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
       clientiHtml += '<td>' + label + '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%;background:#38a169"></div></div></td>';
       clientiHtml += '<td><span class="badge badge-blue">' + c.ordini + '</span></td>';
@@ -388,7 +440,7 @@ function renderAll() {
   document.getElementById('report-clienti').innerHTML = clientiHtml;
   document.getElementById('report-clienti-sub').textContent = telList.length + ' clienti distinti';
 
-  // --- Report spiagge più attive ---
+  // --- Report spiagge piÃ¹ attive ---
   var spiMap = {};
   ordini.forEach(function(o) {
     var s = o.spiaggia || 'non specificata';
