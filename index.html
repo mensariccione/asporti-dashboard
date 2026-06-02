@@ -222,13 +222,18 @@ function resetFilter() {
 function filteredOrdini() {
   var ordini = allOrdini.slice();
   if (filterFrom || filterTo) {
-    var from = filterFrom ? new Date(filterFrom) : null;
-    var to   = filterTo   ? new Date(filterTo)   : null;
+    // Confronto a livello di giorno locale (indice AAAAMMGG), estremi inclusivi.
+    // I valori del filtro arrivano dagli input type=date in formato ISO "AAAA-MM-GG".
+    function dayKeyFromDate(dt) { return dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate(); }
+    function dayKeyFromISO(s) { var p = String(s).split('-'); return (+p[0]) * 10000 + (+p[1]) * 100 + (+p[2]); }
+    var fromKey = filterFrom ? dayKeyFromISO(filterFrom) : null;
+    var toKey   = filterTo   ? dayKeyFromISO(filterTo)   : null;
     ordini = ordini.filter(function(o) {
       var d = parseDate(o.data);
       if (!d) return true;
-      if (from && d < from) return false;
-      if (to   && d > to)   return false;
+      var k = dayKeyFromDate(d);
+      if (fromKey !== null && k < fromKey) return false;
+      if (toKey   !== null && k > toKey)   return false;
       return true;
     });
   }
