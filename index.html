@@ -1,16 +1,4 @@
-  // Imposta automaticamente il filtro sul giorno corrente all'apertura
-  function initTodayFilter() {
-    var todayISO = new Date().toISOString().slice(0, 10);
-    var fromEl = document.getElementById('from-date');
-    var toEl   = document.getElementById('to-date');
-    if (fromEl) fromEl.value = todayISO;
-    if (toEl)   toEl.value   = todayISO;
-    filterFrom = todayISO;
-    filterTo   = todayISO;
-    renderAll();
-  }
-
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -212,7 +200,21 @@ function loadData() {
         return (b.orario||'').localeCompare(a.orario||'');
       });
       document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
-      if (!window.__filterInitialized) { initTodayFilter(); window.__filterInitialized = true; } else { renderAll(); }
+      if (!filterFrom && !filterTo) {
+        var todayISO = (function(){
+          var n = new Date();
+          var mm = String(n.getMonth()+1).padStart(2,'0');
+          var dd = String(n.getDate()).padStart(2,'0');
+          return n.getFullYear()+'-'+mm+'-'+dd;
+        })();
+        filterFrom = todayISO;
+        filterTo   = todayISO;
+        var elFrom = document.getElementById('from-date');
+        var elTo   = document.getElementById('to-date');
+        if (elFrom) elFrom.value = todayISO;
+        if (elTo)   elTo.value   = todayISO;
+      }
+      renderAll();
     })
     .catch(function(e){
       document.getElementById('orders-section').innerHTML = '<div class="err">Errore caricamento: ' + e.message + '</div>';
@@ -288,35 +290,15 @@ function renderAll() {
   document.getElementById('stat-giorni').textContent = giorni;
 
   // --- Ordini per giorno ---
-  // Raggruppa ordini per giorno
   var byDay = {};
   ordini.forEach(function(o) {
     if (!byDay[o.data]) byDay[o.data] = [];
     byDay[o.data].push(o);
   });
-  var days = Object.keys(byDay).sort(function(a, b) {
-    var da = parseDate(a), db = parseDate(b);
-    return da > db ? -1 : da < db ? 1 : 0;
+  var days = Object.keys(byDay).sort(function(a,b){
+    var da=parseDate(a), db=parseDate(b);
+    return da>db?-1:da<db?1:0;
   });
-
-  // Fasce orarie consegne: 12:00 → 16:00, ogni 30 minuti
-  var SLOTS = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
-
-  function slotKey(orario) {
-    if (!orario) return 'Altro';
-    var parts = String(orario).split(':');
-    var h = parseInt(parts[0], 10);
-    var m = parseInt(parts[1] || '0', 10);
-    var totalMin = h * 60 + m;
-    var startMin = 12 * 60;
-    var endMin = 16 * 60 + 30;
-    if (totalMin < startMin || totalMin > endMin) return 'Altro';
-    var slotIdx = Math.floor((totalMin - startMin) / 30);
-    var slotStart = startMin + slotIdx * 30;
-    var sh = Math.floor(slotStart / 60);
-    var sm = slotStart % 60;
-    return (sh < 10 ? '0' : '') + sh + ':' + (sm < 10 ? '0' : '') + sm;
-  }
 
   var html2 = '';
   if (days.length === 0) {
@@ -325,59 +307,80 @@ function renderAll() {
     days.forEach(function(day) {
       var dayOrdini = byDay[day];
       var dayTot = dayOrdini.reduce(function(s, o) { return s + o.totaleNum; }, 0);
-      html2 += '<div class="section-header" style="background:#1e3a5f;color:white;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-radius:10px 10px 0 0">';
-      html2 += '<h2>' + escapeHtml(day) + '</h2>';
-      html2 += '<span>Totale: ' + formatEuro(dayTot) + '</span></div>';
-
-      // Raggruppa per fascia oraria
+      html2 += '<div class="section-header" onclick="toggleDetail(\'day-'+day+'\')" style="cursor:pointer">'
+             + '<h2>📅 ' + day + '</h2>'
+             + '<span>Totale: <strong>' + formatEuro(dayTot) + '</strong></span>'
+             + '</div>';
+      html2 += '<div id="detail-day-' + day + '" class="open">';
+      var SLOTS = [
+        {label:'12:00 – 12:30', h:12, m:0},
+        {label:'12:30 – 13:00', h:12, m:30},
+        {label:'13:00 – 13:30', h:13, m:0},
+        {label:'13:30 – 14:00', h:13, m:30},
+        {label:'14:00 – 14:30', h:14, m:0},
+        {label:'14:30 – 15:00', h:14, m:30},
+        {label:'15:00 – 15:30', h:15, m:0},
+        {label:'15:30 – 16:00', h:15, m:30}
+      ];
+      function slotKey(orario) {
+        var p = String(orario||'').split(':');
+        var oh = parseInt(p[0],10), om = parseInt(p[1],10)||0;
+        if (isNaN(oh)) return -1;
+        for (var si = 0; si < SLOTS.length; si++) {
+          var s = SLOTS[si];
+          var sEnd_h = s.m===30 ? s.h+1 : s.h, sEnd_m = s.m===30 ? 0 : 30;
+          var afterStart = oh > s.h || (oh===s.h && om >= s.m);
+          var beforeEnd  = oh < sEnd_h || (oh===sEnd_h && om < sEnd_m);
+          if (afterStart && beforeEnd) return si;
+        }
+        return -1;
+      }
       var bySlot = {};
       dayOrdini.forEach(function(o) {
-        var sk = slotKey(o.orario);
-        if (!bySlot[sk]) bySlot[sk] = [];
-        bySlot[sk].push(o);
+        var si = slotKey(o.orario);
+        var key = si >= 0 ? si : 'extra';
+        if (!bySlot[key]) bySlot[key] = [];
+        bySlot[key].push(o);
       });
-
-      // Ordine slot: prima i SLOTS definiti, poi 'Altro'
-      var slotOrder = SLOTS.filter(function(s) { return bySlot[s] && bySlot[s].length > 0; });
-      if (bySlot['Altro'] && bySlot['Altro'].length > 0) slotOrder.push('Altro');
-
-      slotOrder.forEach(function(slot) {
-        var slotOrdini = bySlot[slot].sort(function(a, b) {
-          return String(a.orario) < String(b.orario) ? -1 : String(a.orario) > String(b.orario) ? 1 : 0;
-        });
-        var slotTot = slotOrdini.reduce(function(s, o) { return s + o.totaleNum; }, 0);
-        var slotLabel = slot === 'Altro' ? '⏰ Altro orario' : ('🚐 Partenza ' + slot);
-        html2 += '<div style="background:#e8f0fe;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid #2d6a9f;margin-top:4px">';
-        html2 += '<strong style="color:#1e3a5f;font-size:.95rem">' + slotLabel + '</strong>';
-        html2 += '<span style="color:#2d6a9f;font-weight:600">' + slotOrdini.length + ' ordini · ' + formatEuro(slotTot) + '</span></div>';
-        html2 += '<table class="orders-table"><thead><tr>';
-        html2 += '<th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th>';
-        html2 += '</tr></thead><tbody>';
+      var slotKeys = Object.keys(bySlot).sort(function(a,b){ return (+a)-(+b); });
+      slotKeys.forEach(function(sk) {
+        var slotOrdini = bySlot[sk];
+        var slotLabel  = sk === 'extra' ? '⚠️ Fuori orario' : ('🕐 ' + SLOTS[+sk].label);
+        var slotTot = slotOrdini.reduce(function(s,o){return s+o.totaleNum;},0);
+        html2 += '<div style="margin:12px 0 4px 0;padding:8px 16px;background:#e8f0e8;border-left:4px solid #2d6a4f;display:flex;justify-content:space-between;align-items:center;border-radius:0 6px 6px 0">'
+               + '<strong>' + slotLabel + '</strong>'
+               + '<span style="font-size:.85rem;color:#555">' + slotOrdini.length + ' ordini · ' + formatEuro(slotTot) + '</span>'
+               + '</div>';
+        html2 += '<table class="orders-table"><thead><tr>'
+               + '<th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th>'
+               + '</tr></thead><tbody>';
         slotOrdini.forEach(function(o) {
-          html2 += '<tr class="data-row" onclick="toggleDetail('' + escapeHtml(o.id) + '')">';
-          html2 += '<td>' + escapeHtml(o.orario || '-') + '</td>';
-          html2 += '<td>' + escapeHtml(o.nome || '-') + '</td>';
-          html2 += '<td>' + escapeHtml(o.telefono || '-') + '</td>';
-          html2 += '<td>' + escapeHtml(o.spiaggia || '-') + '</td>';
-          html2 += '<td><span class="badge badge-green">' + escapeHtml(o.totale || '0,00 €') + '</span></td>';
-          html2 += '<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();confirmDelete('' + escapeHtml(o.id) + '','' + escapeHtml(o.nome || '') + '')">&#x2715;</button></td>';
+          html2 += '<tr class="data-row" onclick="toggleDetail(\'ord-'+o.id+'\')">';
+          html2 += '<td>' + escapeHtml(o.orario||'') + '</td>';
+          html2 += '<td>' + escapeHtml(o.nome||'') + '</td>';
+          html2 += '<td>' + escapeHtml(o.numero_telefono||'') + '</td>';
+          html2 += '<td>' + escapeHtml(o.spiaggia||'') + '</td>';
+          html2 += '<td><span class="badge badge-green">' + escapeHtml(o.totale||'0,00 €') + '</span></td>';
+          html2 += '<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px;font-size:.8rem" onclick="event.stopPropagation();openModal(\''+o.id+'\',\''+escapeHtml(o.nome||'')+'\')">✕</button></td>';
           html2 += '</tr>';
-          if (o.piatti && o.piatti.length > 0) {
-            html2 += '<tr id="detail-' + escapeHtml(o.id) + '" class="detail-row">';
-            html2 += '<td colspan="6"><div class="detail-content"><ul style="margin:0;padding-left:20px">';
-            o.piatti.forEach(function(p) {
-              html2 += '<li><strong>' + escapeHtml(String(p.quantita || 1)) + 'x</strong> ' + escapeHtml(p.descrizione || '') +
-                (p.varianti ? ' <em style="color:#666">(' + escapeHtml(p.varianti) + ')</em>' : '') +
-                ' — ' + escapeHtml(p.prezzo || '') + '</li>';
+          html2 += '<tr id="detail-ord-' + o.id + '" class="detail-row" style="display:none"><td colspan="6">';
+          var piatti = o.piatti || [];
+          if (piatti.length) {
+            html2 += '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>Qtà</th><th>Prezzo</th><th>Varianti</th></tr></thead><tbody>';
+            piatti.forEach(function(p, pi) {
+              html2 += '<tr><td>' + (pi+1) + '</td><td>' + escapeHtml(p.descrizione||'') + '</td><td>' + escapeHtml(p.quantita||'') + '</td><td>' + escapeHtml(p.prezzo||'') + '</td><td>' + escapeHtml(p.varianti||'') + '</td></tr>';
             });
-            html2 += '</ul></div></td></tr>';
+            html2 += '</tbody></table>';
+          } else {
+            html2 += '<em style="color:#999;font-size:.85rem">Nessun dettaglio piatti</em>';
           }
+          html2 += '</td></tr>';
         });
         html2 += '</tbody></table>';
       });
+      html2 += '</div>';
     });
-  }
-  document.getElementById('orders-section').innerHTML = html2;
+    document.getElementById('orders-section').innerHTML = html2;
 
   // --- Report articoli piÃ¹ venduti ---
   var artMap = {};
