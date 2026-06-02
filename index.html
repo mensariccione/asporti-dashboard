@@ -67,7 +67,7 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 </head>
 <body>
 <header>
-  <h1>ð Dashboard Asporti</h1>
+  <h1>&#x1F3D6; Dashboard Asporti</h1>
   <span id="last-update"></span>
 </header>
 <div class="container">
@@ -80,7 +80,7 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 
   <div class="filter-bar">
     <label>Filtra:</label>
-    <input type="date" id="from-date"> â <input type="date" id="to-date">
+    <input type="date" id="from-date"> &rarr; <input type="date" id="to-date">
     <button class="btn btn-primary" onclick="applyFilter()">Filtra</button>
     <button class="btn btn-secondary" onclick="resetFilter()">Tutti</button>
   </div>
@@ -92,29 +92,29 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 
   <!-- Report -->
   <div class="reports-grid">
-    <!-- Articoli piÃ¹ venduti -->
+    <!-- Articoli pi&#x00F9; venduti -->
     <div class="section">
-      <div class="section-header"><h2>ð½ Articoli piÃ¹ venduti</h2><span id="report-articoli-sub"></span></div>
+      <div class="section-header"><h2>&#x1F37D; Articoli pi&#x00F9; venduti</h2><span id="report-articoli-sub"></span></div>
       <div id="report-articoli"><div class="loading">...</div></div>
     </div>
     <!-- Top clienti -->
     <div class="section">
-      <div class="section-header"><h2>ð¤ Top clienti per spesa</h2><span id="report-clienti-sub"></span></div>
+      <div class="section-header"><h2>&#x1F464; Top clienti per spesa</h2><span id="report-clienti-sub"></span></div>
       <div id="report-clienti"><div class="loading">...</div></div>
     </div>
-    <!-- Spiagge piÃ¹ attive -->
+    <!-- Spiagge pi&#x00F9; attive -->
     <div class="section">
-      <div class="section-header"><h2>â± Spiagge piÃ¹ attive</h2><span id="report-spiagge-sub"></span></div>
+      <div class="section-header"><h2>&#x26F1; Spiagge pi&#x00F9; attive</h2><span id="report-spiagge-sub"></span></div>
       <div id="report-spiagge"><div class="loading">...</div></div>
     </div>
   </div>
 </div>
 
-<button class="refresh-btn" onclick="loadData()">ð Aggiorna</button>
+<button class="refresh-btn" onclick="loadData()">&#x1F504; Aggiorna</button>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <h3>ð Cancella ordine</h3>
+    <h3>&#x1F5D1; Cancella ordine</h3>
     <p>Eliminare l'ordine di <span id="modal-nome"></span>?<br><small>Azione irreversibile.</small></p>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
@@ -143,7 +143,7 @@ function parseEuro(s) {
   return isNaN(n) ? 0 : n;
 }
 function formatEuro(n) {
-  return n.toFixed(2).replace('.',',') + ' â¬';
+  return n.toFixed(2).replace('.',',') + ' &euro;';
 }
 function parseDate(s) {
   if (!s) return null;
@@ -309,17 +309,17 @@ function renderAll() {
       sOrder.forEach(function(slot){
         var sOrd=bySlot[slot].sort(function(a,b){return String(a.orario)<String(b.orario)?-1:String(a.orario)>String(b.orario)?1:0;});
         var sTot=sOrd.reduce(function(s,o){return s+o.totaleNum;},0);
-        var lbl=slot==='Altro'?'⏰ Altro':('🚐 Partenza '+slot);
+        var lbl=slot==='Altro'?'&#x23F0; Altro':('&#x1F690; Partenza '+slot);
         html2+='<div style="background:#e8f0fe;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid #2d6a9f;margin-top:4px"><strong style="color:#1e3a5f">'+lbl+'</strong><span style="color:#2d6a9f;font-weight:600">'+sOrd.length+' ordini &middot; '+formatEuro(sTot)+'</span></div>';
         html2+='<table class="orders-table"><thead><tr><th>Orario</th><th>Nome</th><th>Tel</th><th>Spiaggia</th><th>Totale</th><th></th></tr></thead><tbody>';
         sOrd.forEach(function(o){
           html2+='<tr class="data-row" onclick="toggleDetail(\''+escapeHtml(o.id)+'\')">';
           html2+='<td>'+escapeHtml(o.orario||'-')+'</td><td>'+escapeHtml(o.nome||'-')+'</td><td>'+escapeHtml(o.telefono||'-')+'</td><td>'+escapeHtml(o.spiaggia||'-')+'</td>';
-          html2+='<td><span class="badge badge-green">'+escapeHtml(o.totale||'0,00 €')+'</span></td>';
-          html2+='<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();confirmDelete(\''+escapeHtml(o.id)+'\',\''+escapeHtml(o.nome||'')+'\')">✕</button></td></tr>';
+          html2+='<td><span class="badge badge-green">'+escapeHtml(o.totale||'0,00 &euro;')+'</span></td>';
+          html2+='<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();confirmDelete(\''+escapeHtml(o.id)+'\',\''+escapeHtml(o.nome||'')+'\')">&#x2715;</button></td></tr>';
           if(o.piatti&&o.piatti.length>0){
             html2+='<tr id="detail-'+escapeHtml(o.id)+'" class="detail-row"><td colspan="6"><div class="detail-content"><ul style="margin:0;padding-left:20px">';
-            o.piatti.forEach(function(p){html2+='<li><strong>'+escapeHtml(String(p.quantita||1))+'x</strong> '+escapeHtml(p.descrizione||'')+(p.varianti?' <em style="color:#666">('+escapeHtml(p.varianti)+')</em>':'')+' — '+escapeHtml(p.prezzo||'')+'</li>';});
+            o.piatti.forEach(function(p){html2+='<li><strong>'+escapeHtml(String(p.quantita||1))+'x</strong> '+escapeHtml(p.descrizione||'')+(p.varianti?' <em style="color:#666">('+escapeHtml(p.varianti)+')</em>':'')+' &mdash; '+escapeHtml(p.prezzo||'')+'</li>';});
             html2+='</ul></div></td></tr>';
           }
         });
@@ -329,7 +329,7 @@ function renderAll() {
   }
   document.getElementById('orders-section').innerHTML = html2;
 
-  // --- Report articoli piÃ¹ venduti ---
+  // --- Report articoli pi&#x00F9; venduti ---
   var artMap = {};
   ordini.forEach(function(o) {
     (o.piatti||[]).forEach(function(p) {
@@ -347,7 +347,7 @@ function renderAll() {
   if (artList.length === 0) {
     artHtml = '<div class="empty" style="padding:30px">Nessun dato</div>';
   } else {
-    artHtml = '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>QtÃ </th><th>Incasso</th></tr></thead><tbody>';
+    artHtml = '<table class="report-table"><thead><tr><th>#</th><th>Articolo</th><th>Qt&#x00E0;</th><th>Incasso</th></tr></thead><tbody>';
     artList.slice(0,15).forEach(function(a, i) {
       var pct = Math.round((a.qty / maxQty) * 100);
       artHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
@@ -379,7 +379,7 @@ function renderAll() {
     clientiHtml = '<table class="report-table"><thead><tr><th>#</th><th>Cliente</th><th>Ordini</th><th>Spesa totale</th></tr></thead><tbody>';
     telList.slice(0,15).forEach(function(c, i) {
       var pct = Math.round((c.spesa / maxSpesa) * 100);
-      var label = escapeHtml(c.nome||'â') + (c.tel && c.tel!=='sconosciuto' ? ' <small style="color:#718096">(' + c.tel + ')</small>' : '');
+      var label = escapeHtml(c.nome||'&mdash;') + (c.tel && c.tel!=='sconosciuto' ? ' <small style="color:#718096">(' + c.tel + ')</small>' : '');
       clientiHtml += '<tr><td><span class="rank">' + (i+1) + '</span></td>';
       clientiHtml += '<td>' + label + '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%;background:#38a169"></div></div></td>';
       clientiHtml += '<td><span class="badge badge-blue">' + c.ordini + '</span></td>';
@@ -390,7 +390,7 @@ function renderAll() {
   document.getElementById('report-clienti').innerHTML = clientiHtml;
   document.getElementById('report-clienti-sub').textContent = telList.length + ' clienti distinti';
 
-  // --- Report spiagge piÃ¹ attive ---
+  // --- Report spiagge pi&#x00F9; attive ---
   var spiMap = {};
   ordini.forEach(function(o) {
     var s = o.spiaggia || 'non specificata';
