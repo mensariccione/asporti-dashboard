@@ -11,7 +11,7 @@ header{background:#1e3a5f;color:white;padding:16px 24px;display:flex;align-items
 header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 #last-update{font-size:.8rem;opacity:.7}
 .container{max-width:1200px;margin:0 auto;padding:24px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}h
 .stat-card{background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
 .stat-card .label{font-size:.75rem;text-transform:uppercase;color:#718096;letter-spacing:.05em;margin-bottom:6px}
 .stat-card .value{font-size:2rem;font-weight:700;color:#1e3a5f}
@@ -316,7 +316,7 @@ function renderAll() {
           html2+='<tr class="data-row" onclick="toggleDetail(\''+escapeHtml(o.id)+'\')">';
           html2+='<td>'+escapeHtml(o.orario||'-')+'</td><td>'+escapeHtml(o.nome||'-')+'</td><td>'+escapeHtml(o.telefono||'-')+'</td><td>'+escapeHtml(o.spiaggia||'-')+'</td>';
           html2+='<td><span class="badge badge-green">'+escapeHtml(o.totale||'0,00 €')+'</span></td>';
-          html2+='<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();confirmDelete(\''+escapeHtml(o.id)+'\',\''+escapeHtml(o.nome||'')+'\')">&#x2715;</button></td></tr>';
+          html2+='<td><button class="btn" style="background:#fee2e2;color:#e53e3e;padding:4px 10px" onclick="event.stopPropagation();openModal(\''+escapeHtml(o.id)+'\',\''+escapeHtml(o.nome||'')+'\')">&#x2715;</button></td></tr>';
           if(o.piatti&&o.piatti.length>0){
             html2+='<tr id="detail-'+escapeHtml(o.id)+'" class="detail-row"><td colspan="6"><div class="detail-content"><ul style="margin:0;padding-left:20px">';
             o.piatti.forEach(function(p){html2+='<li><strong>'+escapeHtml(String(p.quantita||1))+'x</strong> '+escapeHtml(p.descrizione||'')+(p.varianti?' <em style="color:#666">('+escapeHtml(p.varianti)+')</em>':'')+' &mdash; '+escapeHtml(p.prezzo||'')+'</li>';});
