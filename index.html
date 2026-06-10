@@ -72,8 +72,8 @@ header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
 </header>
 <div class="container">
   <div class="stats">
-    <div class="stat-card"><div class="label">Ordini Oggi</div><div class="value" id="stat-oggi">-</div></div>
-    <div class="stat-card"><div class="label">Totale Oggi</div><div class="value" id="stat-totale-oggi">-</div></div>
+    <div class="stat-card"><div class="label" id="label-oggi">Ordini Oggi</div><div class="value" id="stat-oggi">-</div></div>
+    <div class="stat-card"><div class="label" id="label-totale-oggi">Totale Oggi</div><div class="value" id="stat-totale-oggi">-</div></div>
     <div class="stat-card"><div class="label">Ordini Totali</div><div class="value" id="stat-totale">-</div></div>
     <div class="stat-card"><div class="label">Giorni Attivi</div><div class="value" id="stat-giorni">-</div></div>
   </div>
@@ -275,11 +275,16 @@ function renderAll() {
 
   // --- Statistiche ---
   var oggi = new Date().toLocaleDateString('it-IT');
-  var ordiniOggi = ordini.filter(function(o){ return o.data === oggi; });
-  var totOggi = ordiniOggi.reduce(function(s,o){ return s + o.totaleNum; }, 0);
+  var filtroAttivo = filterFrom || filterTo;
+  var ordiniPeriodo = filtroAttivo ? ordini : ordini.filter(function(o){ return o.data === oggi; });
+  var totPeriodo = ordiniPeriodo.reduce(function(s,o){ return s + o.totaleNum; }, 0);
   var giorni = new Set(ordini.map(function(o){ return o.data; })).size;
-  document.getElementById('stat-oggi').textContent = ordiniOggi.length;
-  document.getElementById('stat-totale-oggi').innerHTML = formatEuro(totOggi);
+  var labelOggi = document.getElementById('label-oggi');
+  var labelTotOggi = document.getElementById('label-totale-oggi');
+  if(labelOggi) labelOggi.textContent = filtroAttivo ? 'Ordini Periodo' : 'Ordini Oggi';
+  if(labelTotOggi) labelTotOggi.textContent = filtroAttivo ? 'Totale Periodo' : 'Totale Oggi';
+  document.getElementById('stat-oggi').textContent = ordiniPeriodo.length;
+  document.getElementById('stat-totale-oggi').innerHTML = formatEuro(totPeriodo);
   document.getElementById('stat-totale').textContent = ordini.length;
   document.getElementById('stat-giorni').textContent = giorni;
 
