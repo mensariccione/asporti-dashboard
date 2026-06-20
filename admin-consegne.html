@@ -73,17 +73,11 @@ tr.hidden-row{display:none}
   <button class="tab-btn active" onclick="showTab('consegne',this)">🚐 Consegne</button>
   <button class="tab-btn" onclick="showTab('stats',this)">📊 Statistiche</button>
 </div>
-
-<div class="tab-panel active" id="tab-consegne">
-  <div id="slots"></div>
-</div>
-
+<div class="tab-panel active" id="tab-consegne"><div id="slots"></div></div>
 <div class="tab-panel" id="tab-stats">
   <div class="date-filter">
-    <label>Dal</label>
-    <input type="date" id="dateFrom">
-    <label>al</label>
-    <input type="date" id="dateTo">
+    <label>Dal</label><input type="date" id="dateFrom">
+    <label>al</label><input type="date" id="dateTo">
     <button class="btn btn-sm" onclick="renderStats()">🔍 Filtra</button>
     <button class="btn btn-sm" style="background:#555" onclick="setToday()">📅 Oggi</button>
     <button class="btn btn-sm" style="background:#555" onclick="setAll()">Tutti</button>
@@ -91,386 +85,217 @@ tr.hidden-row{display:none}
   <div class="stat-summary" id="statSummary"></div>
   <div id="statsSection"></div>
 </div>
-
 <div class="save-toast" id="toast"></div>
-
 <script>
-var BASE_URL = "https://firestore.googleapis.com/v1/projects/" + "spiagge2026" + "/databases/(default)/documents/" + "asporti";
-var API_KEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
-var FETCH_URL = BASE_URL + "?key=" + API_KEY + "&pageSize=300";
-var SLOT_ORDER = ["12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00"];
-var allDocs = [];
-var toastTimer = null;
-
-// Sort state per table: {tableId: {col: 0|1, dir: 1|-1}}
-// col 0 = qty/ordini (default desc), col 1 = incasso (desc)
-var sortState = {};
-
+var BASE_URL="https://firestore.googleapis.com/v1/projects/"+"spiagge2026"+"/databases/(default)/documents/"+"asporti";
+var API_KEY="AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
+var FETCH_URL=BASE_URL+"?key="+API_KEY+"&pageSize=300";
+var SLOT_ORDER=["12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00"];
+var allDocs=[]; var toastTimer=null;
+var sortState={art:{col:0,dir:-1},cli:{col:0,dir:-1},sp:{col:0,dir:-1}};
+var _artData=[],_cliData=[],_spData=[];
+var PREVIEW=15;
 function getField(f){
-  if(!f) return "";
-  if(f.stringValue !== undefined) return f.stringValue;
-  if(f.integerValue !== undefined) return parseInt(f.integerValue);
-  if(f.doubleValue !== undefined) return parseFloat(f.doubleValue);
-  if(f.booleanValue !== undefined) return f.booleanValue;
-  if(f.arrayValue) return (f.arrayValue.values||[]).map(function(v){return getField(v);});
-  if(f.mapValue){
-    var obj={};
-    Object.keys(f.mapValue.fields||{}).forEach(function(k){obj[k]=getField(f.mapValue.fields[k]);});
-    return obj;
-  }
-  return "";
+  if(!f)return"";
+  if(f.stringValue!==undefined)return f.stringValue;
+  if(f.integerValue!==undefined)return parseInt(f.integerValue);
+  if(f.doubleValue!==undefined)return parseFloat(f.doubleValue);
+  if(f.booleanValue!==undefined)return f.booleanValue;
+  if(f.arrayValue)return(f.arrayValue.values||[]).map(function(v){return getField(v);});
+  if(f.mapValue){var obj={};Object.keys(f.mapValue.fields||{}).forEach(function(k){obj[k]=getField(f.mapValue.fields[k]);});return obj;}
+  return"";
 }
-
-function todayStr(){
-  var d=new Date();
-  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
-}
-
-function dateToInt(s){
-  if(!s) return null;
-  var p=s.split("/");
-  if(p.length!==3) return null;
-  return parseInt(p[2])*10000 + parseInt(p[1])*100 + parseInt(p[0]);
-}
-
-function inputToInt(s){
-  if(!s) return null;
-  var p=s.split("-");
-  if(p.length!==3) return null;
-  return parseInt(p[0])*10000 + parseInt(p[1])*100 + parseInt(p[2]);
-}
-
-function displayToInput(s){
-  if(!s) return "";
-  var p=s.split("/");
-  return p[2]+"-"+p[1]+"-"+p[0];
-}
-
-function showToast(msg,color){
-  var t=document.getElementById("toast");
-  t.textContent=msg;
-  t.style.background=color||"#27ae60";
-  t.style.display="block";
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(function(){t.style.display="none";},2500);
-}
-
-function showTab(name, btn){
+function todayStr(){var d=new Date();return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
+function dateToInt(s){if(!s)return null;var p=s.split("/");if(p.length!==3)return null;return parseInt(p[2])*10000+parseInt(p[1])*100+parseInt(p[0]);}
+function inputToInt(s){if(!s)return null;var p=s.split("-");if(p.length!==3)return null;return parseInt(p[0])*10000+parseInt(p[1])*100+parseInt(p[2]);}
+function displayToInput(s){if(!s)return"";var p=s.split("/");return p[2]+"-"+p[1]+"-"+p[0];}
+function showToast(msg,color){var t=document.getElementById("toast");t.textContent=msg;t.style.background=color||"#27ae60";t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.style.display="none";},2500);}
+function showTab(name,btn){
   document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active");});
-  document.getElementById("tab-"+name).classList.add("active");
-  btn.classList.add("active");
-  if(name==="stats") renderStats();
+  document.getElementById("tab-"+name).classList.add("active");btn.classList.add("active");
+  if(name==="stats")renderStats();
 }
-
-function setToday(){
-  var td=displayToInput(todayStr());
-  document.getElementById("dateFrom").value=td;
-  document.getElementById("dateTo").value=td;
-  renderStats();
-}
-
-function setAll(){
-  document.getElementById("dateFrom").value="";
-  document.getElementById("dateTo").value="";
-  renderStats();
-}
-
+function setToday(){var td=displayToInput(todayStr());document.getElementById("dateFrom").value=td;document.getElementById("dateTo").value=td;renderStats();}
+function setAll(){document.getElementById("dateFrom").value="";document.getElementById("dateTo").value="";renderStats();}
 function loadData(){
   document.getElementById("meta").textContent="Aggiornamento...";
-  fetch(FETCH_URL)
-  .then(function(r){return r.json();})
-  .then(function(data){
+  fetch(FETCH_URL).then(function(r){return r.json();}).then(function(data){
     allDocs=[];
     (data.documents||[]).forEach(function(doc){
       var f=doc.fields||{};
-      allDocs.push({
-        id: doc.name.split("/").pop(),
-        nome: getField(f.nome),
-        orario: getField(f.orario),
-        spiaggia: getField(f.spiaggia),
-        totale: getField(f.totale),
-        numero_telefono: getField(f.numero_telefono),
-        data_giorno: getField(f.data_giorno),
-        piatti: getField(f.piatti)||[],
-        sequenza: getField(f.sequenza) !== "" ? parseInt(getField(f.sequenza)) : 9999
-      });
+      allDocs.push({id:doc.name.split("/").pop(),nome:getField(f.nome),orario:getField(f.orario),
+        spiaggia:getField(f.spiaggia),totale:getField(f.totale),numero_telefono:getField(f.numero_telefono),
+        data_giorno:getField(f.data_giorno),piatti:getField(f.piatti)||[],
+        sequenza:getField(f.sequenza)!==""?parseInt(getField(f.sequenza)):9999});
     });
     var now=new Date();
     document.getElementById("meta").textContent="Agg. "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
     renderSlots();
-    if(document.getElementById("tab-stats").classList.contains("active")) renderStats();
-  })
-  .catch(function(e){document.getElementById("meta").textContent="Errore: "+e.message;});
+    if(document.getElementById("tab-stats").classList.contains("active"))renderStats();
+  }).catch(function(e){document.getElementById("meta").textContent="Errore: "+e.message;});
 }
-
 function renderSlots(){
   var today=todayStr();
   var todayDocs=allDocs.filter(function(d){return d.data_giorno===today;});
   var slotMap={};
-  todayDocs.forEach(function(d){
-    if(!slotMap[d.orario]) slotMap[d.orario]=[];
-    slotMap[d.orario].push(d);
-  });
-  SLOT_ORDER.forEach(function(slot){
-    if(slotMap[slot]) slotMap[slot].sort(function(a,b){return a.sequenza-b.sequenza;});
-  });
+  todayDocs.forEach(function(d){if(!slotMap[d.orario])slotMap[d.orario]=[];slotMap[d.orario].push(d);});
+  SLOT_ORDER.forEach(function(slot){if(slotMap[slot])slotMap[slot].sort(function(a,b){return a.sequenza-b.sequenza;});});
   var html="";
   SLOT_ORDER.forEach(function(slot){
-    var orders=slotMap[slot];
-    if(!orders||!orders.length) return;
+    var orders=slotMap[slot];if(!orders||!orders.length)return;
     var tot=orders.reduce(function(s,d){return s+(parseFloat(d.totale)||0);},0);
-    html+=
-      '<div class="section">'+
-      '<div class="section-header">🚐 Partenza '+slot+'</div>'+
-      '<div class="slot-subheader"><span>'+orders.length+' '+( orders.length===1?"ordine":"ordini" )+'</span><span>'+tot.toFixed(2).replace(".",",")+' €</span></div>'+
-      '<div class="order-list" id="list-'+slot+'">'+
-      orders.map(function(o,i){
-        return '<div class="order-card" data-id="'+o.id+'">'+
-          '<span class="drag-handle">☰</span>'+
-          '<div class="seq-badge">'+( i+1 )+'</div>'+
-          '<div class="order-info">'+
-            '<div class="order-name">'+o.nome+'</div>'+
-            '<div class="order-meta">🏖 Spiaggia '+o.spiaggia+'</div>'+
-          '</div>'+
-          '<div class="order-total">'+( parseFloat(o.totale)||0 ).toFixed(2).replace(".",",")+' €</div>'+
-        '</div>';
-      }).join("")+
-      '</div>'+
-      '<div class="hint">☰ Trascina per riordinare la sequenza delle consegne</div>'+
-      '</div>';
+    html+='<div class="section"><div class="section-header">🚐 Partenza '+slot+'</div>'+
+    '<div class="slot-subheader"><span>'+orders.length+' '+( orders.length===1?"ordine":"ordini")+'</span><span>'+tot.toFixed(2).replace(".",",")+' €</span></div>'+
+    '<div class="order-list" id="list-'+slot+'">'+
+    orders.map(function(o,i){return '<div class="order-card" data-id="'+o.id+'">'+
+      '<span class="drag-handle">☰</span><div class="seq-badge">'+( i+1)+'</div>'+
+      '<div class="order-info"><div class="order-name">'+o.nome+'</div><div class="order-meta">🏖 Spiaggia '+o.spiaggia+'</div></div>'+
+      '<div class="order-total">'+( parseFloat(o.totale)||0).toFixed(2).replace(".",",")+' €</div></div>';}).join("")+
+    '</div><div class="hint">☰ Trascina per riordinare la sequenza delle consegne</div></div>';
   });
-  if(!html) html='<div class="empty">Nessuna consegna per oggi</div>';
+  if(!html)html='<div class="empty">Nessuna consegna per oggi</div>';
   document.getElementById("slots").innerHTML=html;
   SLOT_ORDER.forEach(function(slot){
-    var el=document.getElementById("list-"+slot);
-    if(!el) return;
+    var el=document.getElementById("list-"+slot);if(!el)return;
     Sortable.create(el,{animation:150,handle:".drag-handle",onEnd:function(){onSortEnd(slot);}});
   });
 }
-
 function onSortEnd(slot){
   var list=document.getElementById("list-"+slot);
   var cards=list.querySelectorAll(".order-card");
   var badges=list.querySelectorAll(".seq-badge");
-  cards.forEach(function(c,i){
-    badges[i].textContent=i+1;
-    c.classList.add("saving");c.classList.remove("saved");
-  });
+  cards.forEach(function(c,i){badges[i].textContent=i+1;c.classList.add("saving");c.classList.remove("saved");});
   var promises=[];
   cards.forEach(function(c,i){
     var url=BASE_URL+"/"+c.getAttribute("data-id")+"?key="+API_KEY+"&updateMask.fieldPaths=sequenza";
     promises.push(fetch(url,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{sequenza:{integerValue:i}}})}));
   });
   Promise.all(promises)
-  .then(function(){
-    cards.forEach(function(c){c.classList.remove("saving");c.classList.add("saved");});
-    showToast("✔ Sequenza salvata");
-  })
+  .then(function(){cards.forEach(function(c){c.classList.remove("saving");c.classList.add("saved");});showToast("✔ Sequenza salvata");})
   .catch(function(e){showToast("❌ Errore: "+e.message,"#e74c3c");});
 }
-
-// Global data arrays for sorting
-var _artData=[], _cliData=[], _spData=[];
-
 function renderStats(){
-  var fromVal=document.getElementById("dateFrom").value;
-  var toVal=document.getElementById("dateTo").value;
-  var fromInt=inputToInt(fromVal);
-  var toInt=inputToInt(toVal);
-
+  var fromInt=inputToInt(document.getElementById("dateFrom").value);
+  var toInt=inputToInt(document.getElementById("dateTo").value);
   var filtered=allDocs.filter(function(d){
-    var di=dateToInt(d.data_giorno);
-    if(di===null) return false;
-    if(fromInt!==null && di < fromInt) return false;
-    if(toInt!==null && di > toInt) return false;
+    var di=dateToInt(d.data_giorno);if(di===null)return false;
+    if(fromInt!==null&&di<fromInt)return false;
+    if(toInt!==null&&di>toInt)return false;
     return true;
   });
-
   var nDays=Object.keys(filtered.reduce(function(acc,d){acc[d.data_giorno]=1;return acc;},{})).length;
   var totale=filtered.reduce(function(s,d){return s+(parseFloat(d.totale)||0);},0);
-
   document.getElementById("statSummary").innerHTML=
-    sCard("ORDINI",filtered.length)+
-    sCard("INCASSO TOTALE",totale.toFixed(2).replace(".",",")+' €')+
-    sCard("GIORNI",nDays)+
-    sCard("MEDIA/GIORNO", nDays>0?(totale/nDays).toFixed(2).replace(".",",")+' €':"—");
-
-  // Build data arrays
+    sCard("ORDINI",filtered.length)+sCard("INCASSO TOTALE",totale.toFixed(2).replace(".",",")+' €')+
+    sCard("GIORNI",nDays)+sCard("MEDIA/GIORNO",nDays>0?(totale/nDays).toFixed(2).replace(".",",")+' €':"—");
   var artMap={};
-  filtered.forEach(function(d){
-    (d.piatti||[]).forEach(function(p){
-      var desc=p.descrizione||"?";
-      var qty=parseInt(p.quantita)||1;
-      var pr=parseFloat(p.prezzo)||0;
-      if(!artMap[desc]) artMap[desc]={qty:0,inc:0};
-      artMap[desc].qty+=qty; artMap[desc].inc+=pr*qty;
-    });
-  });
+  filtered.forEach(function(d){(d.piatti||[]).forEach(function(p){
+    var desc=p.descrizione||"?";var qty=parseInt(p.quantita)||1;var pr=parseFloat(p.prezzo)||0;
+    if(!artMap[desc])artMap[desc]={qty:0,inc:0};
+    artMap[desc].qty+=qty;artMap[desc].inc+=pr*qty;
+  });});
   _artData=Object.keys(artMap).map(function(k){return{desc:k,qty:artMap[k].qty,inc:artMap[k].inc};});
-
   var cliMap={};
-  filtered.forEach(function(d){
-    var key=d.nome+" ("+d.numero_telefono+")";
-    if(!cliMap[key]) cliMap[key]={ordini:0,spesa:0};
-    cliMap[key].ordini++; cliMap[key].spesa+=parseFloat(d.totale)||0;
-  });
+  filtered.forEach(function(d){var key=d.nome+" ("+d.numero_telefono+")";if(!cliMap[key])cliMap[key]={ordini:0,spesa:0};cliMap[key].ordini++;cliMap[key].spesa+=parseFloat(d.totale)||0;});
   _cliData=Object.keys(cliMap).map(function(k){return{nome:k,ordini:cliMap[k].ordini,spesa:cliMap[k].spesa};});
-
   var spMap={};
-  filtered.forEach(function(d){
-    var sp=d.spiaggia||"N/D";
-    if(!spMap[sp]) spMap[sp]={ordini:0,inc:0};
-    spMap[sp].ordini++; spMap[sp].inc+=parseFloat(d.totale)||0;
-  });
+  filtered.forEach(function(d){var sp=d.spiaggia||"N/D";if(!spMap[sp])spMap[sp]={ordini:0,inc:0};spMap[sp].ordini++;spMap[sp].inc+=parseFloat(d.totale)||0;});
   _spData=Object.keys(spMap).map(function(k){return{sp:k,ordini:spMap[k].ordini,inc:spMap[k].inc};});
-
-  // Reset sort state
-  sortState={art:{col:0,dir:-1}, cli:{col:0,dir:-1}, sp:{col:0,dir:-1}};
-
-  renderTable("art");
-  renderTable("cli");
-  renderTable("sp");
+  sortState={art:{col:0,dir:-1},cli:{col:0,dir:-1},sp:{col:0,dir:-1}};
+  document.getElementById("statsSection").innerHTML="";
+  buildTable("art");buildTable("cli");buildTable("sp");
 }
-
-function getSortedData(id){
+function getSorted(id){
   var s=sortState[id];
-  var arr;
-  if(id==="art") arr=_artData.slice();
-  else if(id==="cli") arr=_cliData.slice();
-  else arr=_spData.slice();
-
+  var arr=id==="art"?_artData.slice():id==="cli"?_cliData.slice():_spData.slice();
   arr.sort(function(a,b){
-    var va, vb;
-    if(id==="art"){
-      va = s.col===0 ? a.qty : a.inc;
-      vb = s.col===0 ? b.qty : b.inc;
-    } else if(id==="cli"){
-      va = s.col===0 ? a.ordini : a.spesa;
-      vb = s.col===0 ? b.ordini : b.spesa;
-    } else {
-      va = s.col===0 ? a.ordini : a.inc;
-      vb = s.col===0 ? b.ordini : b.inc;
-    }
-    return s.dir * (vb - va);
+    var va,vb;
+    if(id==="art"){va=s.col===0?a.qty:a.inc;vb=s.col===0?b.qty:b.inc;}
+    else if(id==="cli"){va=s.col===0?a.ordini:a.spesa;vb=s.col===0?b.ordini:b.spesa;}
+    else{va=s.col===0?a.ordini:a.inc;vb=s.col===0?b.ordini:b.inc;}
+    return s.dir*(vb-va);
   });
   return arr;
 }
-
-function toggleSort(id, col){
-  var s=sortState[id];
-  if(s.col===col){ s.dir *= -1; }
-  else { s.col=col; s.dir=-1; }
-  renderTable(id);
+// sortCol is called from onclick attr with literal table id
+function sortCol(id,col){
+  if(sortState[id].col===col)sortState[id].dir*=-1;
+  else{sortState[id].col=col;sortState[id].dir=-1;}
+  refreshTable(id);
 }
-
 function toggleExpand(id){
   var tbody=document.getElementById("tbody-"+id);
   var btn=document.getElementById("expand-btn-"+id);
   var hidden=tbody.querySelectorAll("tr.hidden-row");
-  if(hidden.length>0){
-    hidden.forEach(function(r){r.classList.remove("hidden-row");});
-    btn.textContent="▲ Comprimi";
-  } else {
-    var rows=tbody.querySelectorAll("tr");
-    rows.forEach(function(r,i){if(i>=15) r.classList.add("hidden-row");});
-    btn.textContent="▼ Mostra tutti (" + rows.length + ")";
-  }
+  if(hidden.length>0){hidden.forEach(function(r){r.classList.remove("hidden-row");});btn.textContent="▲ Comprimi";}
+  else{var rows=tbody.querySelectorAll("tr");var total=rows.length;rows.forEach(function(r,i){if(i>=PREVIEW)r.classList.add("hidden-row");});btn.textContent="▼ Mostra tutti ("+total+")";}
 }
-
-function renderTable(id){
+function makeRows(id,data){
+  var rowFn;
+  if(id==="art")rowFn=function(a,i){return[i+1,a.desc,a.qty,a.inc.toFixed(2).replace(".",",")+' €'];};
+  else if(id==="cli")rowFn=function(c,i){return[i+1,c.nome,c.ordini,c.spesa.toFixed(2).replace(".",",")+' €'];};
+  else rowFn=function(r,i){return[i+1,r.sp,r.ordini,r.inc.toFixed(2).replace(".",",")+' €'];};
+  return data.map(function(item,i){
+    var cells=rowFn(item,i);
+    var hidden=(i>=PREVIEW)?" hidden-row":"";
+    return '<tr class="'+hidden+'">'+cells.map(function(c,ci){
+      return '<td'+(ci===0?' class="rank"':(ci===cells.length-1?' class="inc"':""))+'>'+c+'</td>';
+    }).join("")+'</tr>';
+  }).join("")||'<tr><td colspan="4" class="empty">Nessun dato</td></tr>';
+}
+function makeHeaders(id){
   var s=sortState[id];
-  var data=getSortedData(id);
-  var total=data.length;
-  var PREVIEW=15;
-
-  var config={
-    art: {
-      title:"🍽 Articoli più venduti",
-      subtitle: total+" articoli distinti",
-      headers:["#","Articolo","Qtà","Incasso"],
-      sortCols:[null,null,0,1],
-      rowFn: function(a,i){ return [i+1, a.desc, a.qty, a.inc.toFixed(2).replace(".",",")+' €']; }
-    },
-    cli: {
-      title:"👤 Clienti per spesa",
-      subtitle: total+" clienti distinti",
-      headers:["#","Cliente","Ordini","Spesa totale"],
-      sortCols:[null,null,0,1],
-      rowFn: function(c,i){ return [i+1, c.nome, c.ordini, c.spesa.toFixed(2).replace(".",",")+' €']; }
-    },
-    sp: {
-      title:"⛱ Spiagge più attive",
-      subtitle: total+" spiagge distinte",
-      headers:["#","Spiaggia","Ordini","Incasso"],
-      sortCols:[null,null,0,1],
-      rowFn: function(r,i){ return [i+1, r.sp, r.ordini, r.inc.toFixed(2).replace(".",",")+' €']; }
-    }
-  };
-  var cfg=config[id];
-
-  // Build header row with sort indicators
-  var thHtml=cfg.headers.map(function(h,i){
-    var sc=cfg.sortCols[i];
-    if(sc===null) return '<th>'+h+'</th>';
+  var headers,sortCols;
+  if(id==="art"){headers=["#","Articolo","Qtà","Incasso"];sortCols=[null,null,0,1];}
+  else if(id==="cli"){headers=["#","Cliente","Ordini","Spesa totale"];sortCols=[null,null,0,1];}
+  else{headers=["#","Spiaggia","Ordini","Incasso"];sortCols=[null,null,0,1];}
+  return headers.map(function(h,i){
+    var sc=sortCols[i];
+    if(sc===null)return'<th>'+h+'</th>';
     var isActive=(s.col===sc);
     var arrow=isActive?(s.dir===-1?"▼":"▲"):"▼";
     var cls="sortable"+(isActive?" sort-active":"");
-    return '<th class="'+cls+'" onclick="toggleSort(\'"+id+"\','+sc+')">'+h+' <span class="sort-arrow'+( isActive?" active":"" )+'">'+arrow+'</span></th>';
+    // Pass literal table id in onclick - use data-* attribute approach
+    return'<th class="'+cls+'" data-tid="'+id+'" data-col="'+sc+'" onclick="sortCol(this.dataset.tid,+this.dataset.col)">'+h+' <span class="sort-arrow'+(isActive?" active":"")+'">'+arrow+'</span></th>';
   }).join("");
-
-  // Build rows
-  var trs=data.map(function(item,i){
-    var cells=cfg.rowFn(item,i);
-    var hidden=(i>=PREVIEW)?" hidden-row":"";
-    return '<tr class="'+hidden+'">'+cells.map(function(c,ci){
-      return '<td'+( ci===0?' class="rank"':(ci===cells.length-1?' class="inc"':"") )+'>'+c+'</td>';
-    }).join("")+'</tr>';
-  }).join("");
-  if(!trs) trs='<tr><td colspan="4" class="empty">Nessun dato</td></tr>';
-
+}
+function buildTable(id){
+  var data=getSorted(id);
+  var total=data.length;
+  var titles={art:"🍽 Articoli più venduti",cli:"👤 Clienti per spesa",sp:"⛱ Spiagge più attive"};
+  var subs={art:total+" articoli distinti",cli:total+" clienti distinti",sp:total+" spiagge distinte"};
   var hasMore=(total>PREVIEW);
   var footer=hasMore
-    ? '<div class="table-footer"><button class="btn-expand" id="expand-btn-'+id+'" onclick="toggleExpand(\'"+id+"\')">▼ Mostra tutti ('+total+')</button></div>'
-    : '';
-
-  // Find existing container or create
-  var existing=document.getElementById("table-"+id);
-  if(existing){
-    existing.querySelector("thead tr").innerHTML=thHtml;
-    existing.querySelector("tbody").innerHTML=trs;
-    var ef=existing.querySelector(".table-footer");
-    if(ef) ef.outerHTML=footer;
-    else if(hasMore) existing.insertAdjacentHTML("beforeend",footer);
-  } else {
-    var html='<div class="section" style="margin-top:14px" id="table-'+id+'">'+
-      '<div class="section-header">'+cfg.title+'<span style="font-size:.8rem;opacity:.7">'+cfg.subtitle+'</span></div>'+
-      '<table><thead><tr>'+thHtml+'</tr></thead>'+
-      '<tbody id="tbody-'+id+'">'+trs+'</tbody></table>'+
-      footer+
-      '</div>';
-    document.getElementById("statsSection").insertAdjacentHTML("beforeend",html);
-  }
-  // Update subtitle
-  var sec=document.getElementById("table-"+id);
-  if(sec){
-    var sh=sec.querySelector(".section-header span");
-    if(sh) sh.textContent=cfg.subtitle;
-  }
+    ?'<div class="table-footer"><button class="btn-expand" id="expand-btn-'+id+'" data-tid="'+id+'" onclick="toggleExpand(this.dataset.tid)">▼ Mostra tutti ('+total+')</button></div>'
+    :'';
+  var html='<div class="section" style="margin-top:14px" id="table-'+id+'">'+
+    '<div class="section-header">'+titles[id]+'<span style="font-size:.8rem;opacity:.7">'+subs[id]+'</span></div>'+
+    '<table><thead><tr>'+makeHeaders(id)+'</tr></thead>'+
+    '<tbody id="tbody-'+id+'">'+makeRows(id,data)+'</tbody></table>'+
+    footer+'</div>';
+  document.getElementById("statsSection").insertAdjacentHTML("beforeend",html);
 }
-
-function sCard(label,value){
-  return '<div class="stat-card"><div class="label">'+label+'</div><div class="value">'+value+'</div></div>';
+function refreshTable(id){
+  var data=getSorted(id);
+  var total=data.length;
+  var el=document.getElementById("table-"+id);if(!el)return;
+  el.querySelector("thead tr").innerHTML=makeHeaders(id);
+  document.getElementById("tbody-"+id).innerHTML=makeRows(id,data);
+  var hasMore=(total>PREVIEW);
+  var oldFoot=el.querySelector(".table-footer");
+  var footHtml=hasMore
+    ?'<div class="table-footer"><button class="btn-expand" id="expand-btn-'+id+'" data-tid="'+id+'" onclick="toggleExpand(this.dataset.tid)">▼ Mostra tutti ('+total+')</button></div>'
+    :'';
+  if(oldFoot)oldFoot.outerHTML=footHtml;
+  else if(hasMore)el.insertAdjacentHTML("beforeend",footHtml);
 }
-
-// Init date inputs to today
+function sCard(label,value){return'<div class="stat-card"><div class="label">'+label+'</div><div class="value">'+value+'</div></div>';}
 (function(){
   var td=new Date();
   var s=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
-  document.getElementById("dateFrom").value=s;
-  document.getElementById("dateTo").value=s;
+  document.getElementById("dateFrom").value=s;document.getElementById("dateTo").value=s;
 })();
-
 loadData();
 </script>
 </body>
