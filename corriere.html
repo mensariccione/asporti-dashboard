@@ -6,61 +6,53 @@
 <title>Consegne Oggi</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
+body{font-family:sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
 header{background:#1e3a5f;color:white;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-header h1{font-size:1.2rem;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.2rem}
 #last-update{font-size:.75rem;opacity:.7}
 .container{max-width:600px;margin:0 auto;padding:16px}
-.date-banner{background:#2d6a9f;color:white;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.date-banner{background:#2d6a9f;color:white;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .date-banner .date{font-size:1.1rem;font-weight:700}
 .date-banner .count{font-size:.85rem;opacity:.85}
 .slot{background:white;border-radius:14px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .slot-header{background:#1e3a5f;color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
-.slot-title{display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600}
+.slot-title{font-size:1rem;font-weight:600}
 .slot-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:.8rem}
-.slot-toggle{font-size:1rem;transition:transform .3s}
-.slot-toggle.closed{transform:rotate(180deg)}
 .orders-list{display:block}
 .orders-list.closed{display:none}
 .order-card{border-bottom:1px solid #edf2f7}
 .order-card:last-child{border-bottom:none}
 .order-main{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s}
 .order-main:hover{background:#f7fafc}
-.order-main:active{background:#edf2f7}
-.order-time{background:#e2e8f0;color:#4a5568;border-radius:8px;padding:5px 10px;font-size:.85rem;font-weight:700;white-space:nowrap;min-width:58px;text-align:center}
+.order-time{background:#e2e8f0;color:#4a5568;border-radius:8px;padding:5px 10px;font-size:.85rem;font-weight:700;text-align:center;min-width:58px}
 .order-info{flex:1;min-width:0}
 .order-name{font-weight:700;font-size:.95rem;color:#1e3a5f;text-transform:capitalize}
 .order-beach{color:#718096;font-size:.82rem;margin-top:2px}
-.order-total{font-weight:700;font-size:.95rem;color:#276749;white-space:nowrap}
-.order-arrow{color:#a0aec0;font-size:.9rem;margin-left:4px;transition:transform .2s;display:inline-block}
+.order-total{font-weight:700;color:#276749;white-space:nowrap}
+.order-arrow{color:#a0aec0;margin-left:4px;transition:transform .2s;display:inline-block}
 .order-arrow.open{transform:rotate(180deg)}
 .order-detail{display:none;background:#f7fafc;border-top:1px solid #edf2f7}
 .order-detail.open{display:block}
 .detail-inner{padding:14px 16px}
 .detail-section{margin-bottom:14px}
-.detail-section:last-child{margin-bottom:0}
 .detail-label{font-size:.7rem;text-transform:uppercase;color:#718096;letter-spacing:.05em;margin-bottom:8px;font-weight:600}
 .piatti-list{list-style:none}
-.piatto-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #edf2f7;font-size:.88rem}
+.piatto-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #edf2f7;font-size:.88rem}
 .piatto-item:last-child{border-bottom:none}
-.piatto-qty{background:#2d6a9f;color:white;border-radius:6px;padding:2px 8px;font-weight:700;font-size:.8rem;min-width:28px;text-align:center;flex-shrink:0;margin-top:2px}
+.piatto-qty{background:#2d6a9f;color:white;border-radius:6px;padding:2px 8px;font-weight:700;font-size:.8rem;min-width:28px;text-align:center;flex-shrink:0}
 .piatto-desc{flex:1;color:#2d3748;line-height:1.4}
 .piatto-var{color:#718096;font-size:.8rem;margin-top:3px;font-style:italic}
-.piatto-price{color:#276749;font-weight:600;white-space:nowrap;flex-shrink:0}
-.tel-btn{display:flex;align-items:center;gap:10px;background:#25D366;color:white;border-radius:10px;padding:13px 16px;text-decoration:none;font-weight:600;font-size:.9rem;justify-content:center;transition:background .2s}
+.piatto-price{color:#276749;font-weight:600;white-space:nowrap}
+.tel-btn{display:flex;align-items:center;gap:10px;background:#25D366;color:white;border-radius:10px;padding:13px 16px;text-decoration:none;font-weight:600;font-size:.9rem;justify-content:center;transition:background .2s;margin-top:4px}
 .tel-btn:hover{background:#1aad4f}
-.tel-btn:active{background:#158f3d}
-.wa-icon{width:22px;height:22px;fill:white;flex-shrink:0}
-.empty{text-align:center;padding:56px 20px;color:#a0aec0}
-.empty-icon{font-size:3.5rem;margin-bottom:14px}
-.empty p{font-size:1rem}
 .loading{text-align:center;padding:60px}
-.loading-spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2d6a9f;border-radius:50%;animation:spin 1s linear infinite}
+.spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2d6a9f;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.err{background:#fff5f5;color:#e53e3e;border-radius:12px;padding:20px;text-align:center;margin:16px 0;font-size:.9rem;line-height:1.5}
-.refresh-fab{position:fixed;bottom:20px;right:20px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:13px 22px;cursor:pointer;font-size:.9rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;z-index:100;transition:background .2s,transform .1s}
-.refresh-fab:hover{background:#1e3a5f}
-.refresh-fab:active{transform:scale(.95)}
+.empty{text-align:center;padding:56px;color:#a0aec0}
+.empty-icon{font-size:3rem;margin-bottom:12px}
+.err{background:#fff5f5;color:#e53e3e;border-radius:12px;padding:20px;text-align:center;margin:16px 0}
+.fab{position:fixed;bottom:20px;right:20px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:13px 22px;cursor:pointer;font-size:.9rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:100}
+.fab:hover{background:#1e3a5f}
 </style>
 </head>
 <body>
@@ -68,188 +60,130 @@ header h1{font-size:1.2rem;display:flex;align-items:center;gap:10px}
   <h1>&#x1F6F5; Consegne Oggi</h1>
   <span id="last-update">Caricamento...</span>
 </header>
-<div class="container">
-  <div id="app">
-    <div class="loading">
-      <div class="loading-spinner"></div>
-      <p style="margin-top:16px;color:#718096;">Caricamento ordini...</p>
-    </div>
-  </div>
-</div>
-<button class="refresh-fab" onclick="loadData()">&#x1F504; Aggiorna</button>
+<div class="container"><div id="app"><div class="loading"><div class="spinner"></div><p style="margin-top:14px;color:#718096">Caricamento ordini...</p></div></div></div>
+<button class="fab" onclick="loadData()">&#x1F504; Aggiorna</button>
 <script>
-var API_URL = 'https://firestore.googleapis.com/v1/projects/spiagge2026/databases/(default)/documents/asporti?key=AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q&pageSize=300';
-var REFRESH_MS = 60000;
-var NON_DIGIT = new RegExp('[^0-9]', 'g');
+var BASE = "https://firestore.googleapis.com/v1/projects/spiagge2026/databases/(default)/documents/asporti";
+var KEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
+var URL = BASE + "?key=" + KEY + "&pageSize=300";
+var NON_DIGIT = /[^0-9]/g;
+var AMP = /&/g, LT = /</g, GT = />/g, QT = /"/g;
 
-function getTodayStr() {
+function today() {
   var d = new Date();
-  var dd = String(d.getDate()).padStart(2, '0');
-  var mm = String(d.getMonth() + 1).padStart(2, '0');
-  return dd + '/' + mm + '/' + d.getFullYear();
+  return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+"/"+d.getFullYear();
 }
 
-function parseDoc(doc) {
+function esc(s) {
+  return String(s).replace(AMP,"&amp;").replace(LT,"&lt;").replace(GT,"&gt;").replace(QT,"&quot;");
+}
+
+function wa(tel) {
+  var n = tel.replace(NON_DIGIT,"");
+  return "https://wa.me/" + (n.indexOf("39")===0 ? n : "39"+n);
+}
+
+function parse(doc) {
   var f = doc.fields;
-  var piatti = [];
+  var p = [];
   if (f.piatti && f.piatti.arrayValue && f.piatti.arrayValue.values) {
-    piatti = f.piatti.arrayValue.values.map(function(v) {
+    p = f.piatti.arrayValue.values.map(function(v){
       var pf = v.mapValue.fields;
       return {
-        descrizione: pf.descrizione ? pf.descrizione.stringValue : '',
-        quantita: pf.quantita ? pf.quantita.stringValue : '1',
-        prezzo: pf.prezzo ? pf.prezzo.stringValue : '',
-        varianti: pf.varianti ? pf.varianti.stringValue : ''
+        desc: pf.descrizione ? pf.descrizione.stringValue : "",
+        qty: pf.quantita ? pf.quantita.stringValue : "1",
+        price: pf.prezzo ? pf.prezzo.stringValue : "",
+        var: pf.varianti ? pf.varianti.stringValue : ""
       };
     });
   }
   return {
-    id: doc.name.split('/').pop(),
-    nome: f.nome ? f.nome.stringValue : '',
-    orario: f.orario ? f.orario.stringValue : '',
-    spiaggia: f.spiaggia ? f.spiaggia.stringValue : '',
-    telefono: f.numero_telefono ? f.numero_telefono.stringValue : '',
-    totale: f.totale ? f.totale.stringValue : '',
-    data_giorno: f.data_giorno ? f.data_giorno.stringValue : '',
-    piatti: piatti
+    id: doc.name.split("/").pop(),
+    nome: f.nome ? f.nome.stringValue : "",
+    orario: f.orario ? f.orario.stringValue : "",
+    spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
+    tel: f.numero_telefono ? f.numero_telefono.stringValue : "",
+    totale: f.totale ? f.totale.stringValue : "",
+    data: f.data_giorno ? f.data_giorno.stringValue : "",
+    piatti: p
   };
 }
 
-function waLink(tel) {
-  var clean = tel.replace(NON_DIGIT, '');
-  var intl = clean.indexOf('39') === 0 ? clean : '39' + clean;
-  return 'https://wa.me/' + intl;
+function renderOrder(o) {
+  var did = "d" + o.id;
+  var ph = o.piatti.length === 0
+    ? '<p style="color:#a0aec0;font-style:italic;padding:8px 0">Nessun piatto</p>'
+    : '<ul class="piatti-list">' + o.piatti.map(function(p){
+        return '<li class="piatto-item"><span class="piatto-qty">x'+p.qty+'</span>'
+          + '<div class="piatto-desc">'+esc(p.desc)+(p.var?'<div class="piatto-var">'+esc(p.var)+'</div>':"")+'</div>'
+          + '<span class="piatto-price">'+esc(p.price)+'</span></li>';
+      }).join("") + "</ul>";
+  var th = o.tel
+    ? '<a class="tel-btn" href="'+wa(o.tel)+'" target="_blank">&#x1F4F2; Chiama su WhatsApp: '+esc(o.tel)+"</a>"
+    : '<p style="color:#a0aec0;font-style:italic">Nessun numero</p>';
+  return '<div class="order-card">'
+    + '<div class="order-main" onclick="tog(\"'+did+'\")"'   >'
+    + '<div class="order-time">&#x23F0; '+esc(o.orario)+'</div>'
+    + '<div class="order-info"><div class="order-name">'+esc(o.nome)+'</div>'
+    + '<div class="order-beach">&#x1F3D6; Spiaggia '+esc(o.spiaggia)+'</div></div>'
+    + '<div class="order-total">'+esc(o.totale)+'</div>'
+    + '<span class="order-arrow" id="a'+did+'">&#9660;</span></div>'
+    + '<div class="order-detail" id="'+did+'"><div class="detail-inner">'
+    + '<div class="detail-section"><div class="detail-label">&#x1F374; Ordinato</div>'+ph+'</div>'
+    + '<div class="detail-section"><div class="detail-label">&#x1F4DE; Contatto</div>'+th+'</div>'
+    + '</div></div></div>';
 }
 
-function waSvgHtml() {
-  return '<svg class="wa-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+function renderSlot(orario, orders) {
+  var lid = "l" + orario.replace(":", "");
+  return '<div class="slot">'
+    + '<div class="slot-header" onclick="tog2(\"'+lid+'\")">' 
+    + '<span class="slot-title">&#x1F680; Partenza '+orario+'</span>'
+    + '<span class="slot-badge">'+orders.length+' ' + (orders.length===1?"ordine":"ordini") + '</span></div>'
+    + '<div class="orders-list" id="'+lid+'">'+orders.map(renderOrder).join("")+'</div></div>';
 }
 
-function escHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function tog(id) {
+  var el = document.getElementById(id);
+  var ar = document.getElementById("a"+id);
+  if (el) el.classList.toggle("open");
+  if (ar) ar.classList.toggle("open");
 }
 
-function renderSlot(orario, ordini) {
-  var listId = 'list-' + orario.replace(':', '');
-  var ordersHtml = ordini.map(function(o) {
-    var detailId = 'detail-' + o.id;
-    var piattiHtml;
-    if (o.piatti.length === 0) {
-      piattiHtml = '<p style="color:#a0aec0;font-style:italic;font-size:.85rem;padding:8px 0;">Nessun piatto registrato</p>';
-    } else {
-      piattiHtml = '<ul class="piatti-list">' + o.piatti.map(function(p) {
-        return '<li class="piatto-item">' +
-          '<span class="piatto-qty">x' + p.quantita + '</span>' +
-          '<div class="piatto-desc">' + escHtml(p.descrizione) +
-            (p.varianti ? '<div class="piatto-var">' + escHtml(p.varianti) + '</div>' : '') +
-          '</div>' +
-          '<span class="piatto-price">' + escHtml(p.prezzo) + '</span>' +
-          '</li>';
-      }).join('') + '</ul>';
-    }
-    var telHtml;
-    if (o.telefono) {
-      telHtml = '<a class="tel-btn" href="' + waLink(o.telefono) + '" target="_blank">' +
-        waSvgHtml() + ' Chiama su WhatsApp &mdash; ' + escHtml(o.telefono) +
-        '</a>';
-    } else {
-      telHtml = '<p style="color:#a0aec0;font-size:.85rem;font-style:italic;">Nessun numero disponibile</p>';
-    }
-    return '<div class="order-card">' +
-      '<div class="order-main" onclick="toggleDetail('' + detailId + '')">' +
-        '<div class="order-time">&#x23F0; ' + escHtml(o.orario) + '</div>' +
-        '<div class="order-info">' +
-          '<div class="order-name">' + escHtml(o.nome) + '</div>' +
-          '<div class="order-beach">&#x1F3D6; Spiaggia ' + escHtml(o.spiaggia) + '</div>' +
-        '</div>' +
-        '<div class="order-total">' + escHtml(o.totale) + '</div>' +
-        '<span class="order-arrow" id="arrow-' + detailId + '">&#9660;</span>' +
-      '</div>' +
-      '<div class="order-detail" id="' + detailId + '">' +
-        '<div class="detail-inner">' +
-          '<div class="detail-section">' +
-            '<div class="detail-label">&#x1F374; Ordinato</div>' +
-            piattiHtml +
-          '</div>' +
-          '<div class="detail-section">' +
-            '<div class="detail-label">&#x1F4DE; Contatto</div>' +
-            telHtml +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-
-  return '<div class="slot">' +
-    '<div class="slot-header" onclick="toggleSlot('' + listId + '')">' +
-      '<div class="slot-title">&#x1F680; Partenza ' + escHtml(orario) + '</div>' +
-      '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<span class="slot-badge">' + ordini.length + ' ' + (ordini.length === 1 ? 'ordine' : 'ordini') + '</span>' +
-        '<span class="slot-toggle" id="toggle-' + listId + '">&#9650;</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="orders-list" id="' + listId + '">' + ordersHtml + '</div>' +
-  '</div>';
-}
-
-function toggleSlot(listId) {
-  var list = document.getElementById(listId);
-  var toggle = document.getElementById('toggle-' + listId);
-  if (list) list.classList.toggle('closed');
-  if (toggle) toggle.classList.toggle('closed');
-}
-
-function toggleDetail(detailId) {
-  var el = document.getElementById(detailId);
-  var arrow = document.getElementById('arrow-' + detailId);
-  if (el) el.classList.toggle('open');
-  if (arrow) arrow.classList.toggle('open');
+function tog2(lid) {
+  var el = document.getElementById(lid);
+  if (el) el.classList.toggle("closed");
 }
 
 function loadData() {
-  fetch(API_URL)
-    .then(function(resp) {
-      if (!resp.ok) throw new Error('Errore rete: ' + resp.status);
-      return resp.json();
-    })
+  fetch(URL)
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(data) {
-      var docs = data.documents || [];
-      var oggi = getTodayStr();
-      var ordiniOggi = docs.map(parseDoc)
-        .filter(function(o) { return o.data_giorno === oggi; })
-        .sort(function(a, b) { return a.orario < b.orario ? -1 : a.orario > b.orario ? 1 : 0; });
+      var oggi = today();
+      var ord = (data.documents||[]).map(parse)
+        .filter(function(o){ return o.data === oggi; })
+        .sort(function(a,b){ return a.orario < b.orario ? -1 : a.orario > b.orario ? 1 : 0; });
       var slots = {};
-      ordiniOggi.forEach(function(o) {
-        if (!slots[o.orario]) slots[o.orario] = [];
-        slots[o.orario].push(o);
-      });
-      var now = new Date().toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-      document.getElementById('last-update').textContent = 'Agg. ' + now;
-      var app = document.getElementById('app');
-      if (ordiniOggi.length === 0) {
+      ord.forEach(function(o){ if(!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
+      var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+      document.getElementById("last-update").textContent = "Agg. " + now;
+      var app = document.getElementById("app");
+      if (ord.length === 0) {
         app.innerHTML = '<div class="empty"><div class="empty-icon">&#x1F4EB;</div><p>Nessuna consegna per oggi.</p></div>';
         return;
       }
-      var dateBanner = '<div class="date-banner">' +
-        '<span class="date">&#x1F4C5; ' + oggi + '</span>' +
-        '<span class="count">' + ordiniOggi.length + ' consegne</span>' +
-        '</div>';
-      var orariSorted = Object.keys(slots).sort();
-      var slotsHtml = orariSorted.map(function(or) { return renderSlot(or, slots[or]); }).join('');
-      app.innerHTML = dateBanner + slotsHtml;
+      var banner = '<div class="date-banner"><span class="date">&#x1F4C5; '+oggi+'</span><span class="count">'+ord.length+' consegne</span></div>';
+      var html = Object.keys(slots).sort().map(function(or){ return renderSlot(or,slots[or]); }).join("");
+      app.innerHTML = banner + html;
     })
-    .catch(function(e) {
-      document.getElementById('app').innerHTML = '<div class="err">&#x274C; Errore nel caricamento:<br>' + e.message + '</div>';
-      document.getElementById('last-update').textContent = 'Errore';
+    .catch(function(e){
+      document.getElementById("app").innerHTML = '<div class="err">&#x274C; Errore: '+e.message+'</div>';
+      document.getElementById("last-update").textContent = "Errore";
     });
 }
 
 loadData();
-setInterval(loadData, REFRESH_MS);
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
