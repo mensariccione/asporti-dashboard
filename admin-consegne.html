@@ -57,7 +57,7 @@ table tr:last-child td{border-bottom:none}
   <h1>🛠 Gestione Consegne</h1>
   <div style="display:flex;align-items:center;gap:12px">
     <span class="meta" id="meta">Caricamento...</span>
-    <button class="btn" id="refreshBtn" onclick="loadData()">🔄 Aggiorna</button>
+    <button class="btn" onclick="loadData()">🔄 Aggiorna</button>
   </div>
 </div>
 <div class="tabs">
@@ -65,12 +65,10 @@ table tr:last-child td{border-bottom:none}
   <button class="tab-btn" onclick="showTab('stats',this)">📊 Statistiche</button>
 </div>
 
-<!-- TAB 1: CONSEGNE -->
 <div class="tab-panel active" id="tab-consegne">
   <div id="slots"></div>
 </div>
 
-<!-- TAB 2: STATISTICHE -->
 <div class="tab-panel" id="tab-stats">
   <div class="date-filter">
     <label>Dal</label>
@@ -110,27 +108,29 @@ function getField(f){
   return "";
 }
 
+// Returns dd/mm/yyyy of today (local time)
 function todayStr(){
   var d=new Date();
   return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
 }
 
-// Convert dd/mm/yyyy to Date object for comparison
-function parseDate(s){
+// Convert dd/mm/yyyy to integer yyyymmdd for easy comparison
+function dateToInt(s){
   if(!s) return null;
   var p=s.split("/");
   if(p.length!==3) return null;
-  return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  return parseInt(p[2])*10000 + parseInt(p[1])*100 + parseInt(p[0]);
 }
 
-// Convert yyyy-mm-dd input value to dd/mm/yyyy
-function inputToDisplay(s){
-  if(!s) return "";
+// Convert yyyy-mm-dd (input value) to integer yyyymmdd
+function inputToInt(s){
+  if(!s) return null;
   var p=s.split("-");
-  return p[2]+"/"+p[1]+"/"+p[0];
+  if(p.length!==3) return null;
+  return parseInt(p[0])*10000 + parseInt(p[1])*100 + parseInt(p[2]);
 }
 
-// Convert dd/mm/yyyy to yyyy-mm-dd for input
+// Convert dd/mm/yyyy to yyyy-mm-dd for date input
 function displayToInput(s){
   if(!s) return "";
   var p=s.split("/");
@@ -190,7 +190,6 @@ function loadData(){
     var now=new Date();
     document.getElementById("meta").textContent="Agg. "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
     renderSlots();
-    // If stats tab is active, refresh it too
     if(document.getElementById("tab-stats").classList.contains("active")) renderStats();
   })
   .catch(function(e){document.getElementById("meta").textContent="Errore: "+e.message;});
@@ -263,31 +262,29 @@ function onSortEnd(slot){
 }
 
 function renderStats(){
-  var fromVal=document.getElementById("dateFrom").value;
+  var fromVal=document.getElementById("dateFrom").value; // yyyy-mm-dd or ""
   var toVal=document.getElementById("dateTo").value;
-  var fromD=fromVal ? new Date(fromVal) : null;
-  var toD=toVal ? new Date(toVal) : null;
-  if(toD) toD.setHours(23,59,59);
+  var fromInt=inputToInt(fromVal); // yyyymmdd int or null
+  var toInt=inputToInt(toVal);
 
   var filtered=allDocs.filter(function(d){
-    var dt=parseDate(d.data_giorno);
-    if(!dt) return false;
-    if(fromD && dt < fromD) return false;
-    if(toD && dt > toD) return false;
+    var di=dateToInt(d.data_giorno); // yyyymmdd int from dd/mm/yyyy
+    if(di===null) return false;
+    if(fromInt!==null && di < fromInt) return false;
+    if(toInt!==null && di > toInt) return false;
     return true;
   });
 
   var nDays=Object.keys(filtered.reduce(function(acc,d){acc[d.data_giorno]=1;return acc;},{})).length;
   var totale=filtered.reduce(function(s,d){return s+(parseFloat(d.totale)||0);},0);
 
-  // Stat summary cards
   document.getElementById("statSummary").innerHTML=
     sCard("ORDINI",filtered.length)+
     sCard("INCASSO TOTALE",totale.toFixed(2).replace(".",",")+' €')+
     sCard("GIORNI",nDays)+
     sCard("MEDIA/GIORNO", nDays>0?(totale/nDays).toFixed(2).replace(".",",")+' €':"—");
 
-  // Articoli piu venduti
+  // Articoli
   var artMap={};
   filtered.forEach(function(d){
     (d.piatti||[]).forEach(function(p){
@@ -322,26 +319,14 @@ function renderStats(){
   spArr.sort(function(a,b){return b.ordini-a.ordini;});
 
   document.getElementById("statsSection").innerHTML=
-    mkTable(
-      "🍽 Articoli più venduti", artArr.length+" articoli distinti",
-      ["#","Articolo","Qtà","Incasso"],
-      artArr.slice(0,20).map(function(a,i){
-        return [i+1, a.desc, a.qty, a.inc.toFixed(2).replace(".",",")+' €'];
-      })
+    mkTable("🍽 Articoli più venduti",artArr.length+" articoli distinti",["#","Articolo","Qtà","Incasso"],
+      artArr.slice(0,20).map(function(a,i){return[i+1,a.desc,a.qty,a.inc.toFixed(2).replace(".",",")+' €'];})
     )+
-    mkTable(
-      "👤 Clienti per spesa", cliArr.length+" clienti distinti",
-      ["#","Cliente","Ordini","Spesa totale"],
-      cliArr.slice(0,20).map(function(c,i){
-        return [i+1, c.nome, c.ordini, c.spesa.toFixed(2).replace(".",",")+' €'];
-      })
+    mkTable("👤 Clienti per spesa",cliArr.length+" clienti distinti",["#","Cliente","Ordini","Spesa totale"],
+      cliArr.slice(0,20).map(function(c,i){return[i+1,c.nome,c.ordini,c.spesa.toFixed(2).replace(".",",")+' €'];})
     )+
-    mkTable(
-      "⛱ Spiagge più attive", spArr.length+" spiagge distinte",
-      ["#","Spiaggia","Ordini","Incasso"],
-      spArr.slice(0,20).map(function(s,i){
-        return [i+1, s.sp, s.ordini, s.inc.toFixed(2).replace(".",",")+' €'];
-      })
+    mkTable("⛱ Spiagge più attive",spArr.length+" spiagge distinte",["#","Spiaggia","Ordini","Incasso"],
+      spArr.slice(0,20).map(function(s,i){return[i+1,s.sp,s.ordini,s.inc.toFixed(2).replace(".",",")+' €'];})
     );
 }
 
@@ -349,7 +334,7 @@ function sCard(label,value){
   return '<div class="stat-card"><div class="label">'+label+'</div><div class="value">'+value+'</div></div>';
 }
 
-function mkTable(title, subtitle, headers, rows){
+function mkTable(title,subtitle,headers,rows){
   var ths=headers.map(function(h){return'<th>'+h+'</th>';}).join("");
   var trs=rows.map(function(r){
     return '<tr>'+r.map(function(c,i){
