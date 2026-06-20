@@ -104,7 +104,7 @@ function parse(doc) {
     if (f.sequenza.integerValue !== undefined) seq = parseInt(f.sequenza.integerValue);
     else if (f.sequenza.doubleValue !== undefined) seq = parseFloat(f.sequenza.doubleValue);
   }
-  return {id: doc.name.split("/").pop(),
+  return {id: doc.name.split("/").pop(),h
           nome: f.nome ? f.nome.stringValue : "",
           orario: f.orario ? f.orario.stringValue : "",
           spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
@@ -207,7 +207,7 @@ function loadData() {
 }
 
 loadData();
-setInterval(loadData, 30000);
+// Auto-refresh rimosso: usa il tasto Aggiorna;
 </script>
 </body>
 </html>
