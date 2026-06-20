@@ -22,6 +22,7 @@ header h1{font-size:1.2rem}
 .orders-list.closed{display:none}
 .order-card{border-bottom:1px solid #edf2f7}
 .order-card:last-child{border-bottom:none}
+.order-seq{background:#e2e8f0;color:#4a5568;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
 .order-main{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s}
 .order-main:hover{background:#f7fafc}
 .order-time{background:#e2e8f0;color:#4a5568;border-radius:8px;padding:5px 10px;font-size:.85rem;font-weight:700;text-align:center;min-width:58px}
@@ -98,6 +99,11 @@ function parse(doc) {
               vr: pf.varianti ? pf.varianti.stringValue : ""};
     });
   }
+  var seq = 9999;
+  if (f.sequenza) {
+    if (f.sequenza.integerValue !== undefined) seq = parseInt(f.sequenza.integerValue);
+    else if (f.sequenza.doubleValue !== undefined) seq = parseFloat(f.sequenza.doubleValue);
+  }
   return {id: doc.name.split("/").pop(),
           nome: f.nome ? f.nome.stringValue : "",
           orario: f.orario ? f.orario.stringValue : "",
@@ -105,12 +111,14 @@ function parse(doc) {
           tel: f.numero_telefono ? f.numero_telefono.stringValue : "",
           totale: f.totale ? f.totale.stringValue : "",
           data: f.data_giorno ? f.data_giorno.stringValue : "",
+          sequenza: seq,
           piatti: p};
 }
 
-function renderOrder(o) {
+function renderOrder(o, idx) {
   var did = "d" + o.id;
   var ph, th;
+  var seqNum = o.sequenza < 9999 ? o.sequenza + 1 : idx + 1;
   if (o.piatti.length === 0) {
     ph = "<p style=\"color:#a0aec0;font-style:italic;padding:8px 0\">Nessun piatto</p>";
   } else {
@@ -132,6 +140,7 @@ function renderOrder(o) {
   }
   var html = "<div class=\"order-card\">";
   html += "<div class=\"order-main\" onclick=\"tog('"+did+"')\">"; 
+  html += "<div class=\"order-seq\">" + seqNum + "</div>";
   html += "<div class=\"order-time\">&#x23F0; " + esc(o.orario) + "</div>";
   html += "<div class=\"order-info\"><div class=\"order-name\">" + esc(o.nome) + "</div>";
   html += "<div class=\"order-beach\">&#x1F3D6; Spiaggia " + esc(o.spiaggia) + "</div></div>";
@@ -174,7 +183,10 @@ function loadData() {
       var oggi = today();
       var ord = (data.documents||[]).map(parse)
         .filter(function(o) { return o.data === oggi; })
-        .sort(function(a, b) { return a.orario < b.orario ? -1 : a.orario > b.orario ? 1 : 0; });
+        .sort(function(a, b) {
+          if (a.orario !== b.orario) return a.orario < b.orario ? -1 : 1;
+          return a.sequenza - b.sequenza;
+        });
       var slots = {};
       ord.forEach(function(o) { if (!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
       var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
@@ -195,7 +207,7 @@ function loadData() {
 }
 
 loadData();
-setInterval(loadData, 60000);
+setInterval(loadData, 30000);
 </script>
 </body>
 </html>
