@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>&#x1F6E0; Gestione Consegne</title>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
+header{background:#1e3a5f;color:white;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+header h1{font-size:1.2rem;display:flex;align-items:center;gap:8px}
+#status{font-size:.75rem;opacity:.8;min-width:80px;text-align:right}
+.container{max-width:680px;margin:0 auto;padding:16px}
+.date-banner{background:#2d6a9f;color:white;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.date-banner .date{font-size:1.1rem;font-weight:700}
+.date-banner .count{font-size:.85rem;opacity:.85}
+.slot{background:white;border-radius:14px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.slot-header{background:#1e3a5f;color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.slot-title{font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.slot-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:.8rem}
+.sortable-list{min-height:4px;padding:4px 0}
+.order-card{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #edf2f7;cursor:grab;transition:background .15s;user-select:none;background:white}
+.order-card:last-child{border-bottom:none}
+.order-card:hover{background:#f7fafc}
+.order-card.sortable-ghost{opacity:.4;background:#bee3f8}
+.order-card.sortable-chosen{background:#ebf8ff;box-shadow:0 4px 12px rgba(0,0,0,.15);cursor:grabbing}
+.drag-handle{color:#cbd5e0;font-size:1.3rem;cursor:grab;flex-shrink:0;padding:2px 4px;line-height:1}
+.drag-handle:hover{color:#718096}
+.order-seq{background:#2d6a9f;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;transition:background .2s}
+.order-seq.saving{background:#ed8936}
+.order-seq.saved{background:#48bb78}
+.order-time{background:#e2e8f0;color:#4a5568;border-radius:8px;padding:4px 10px;font-size:.82rem;font-weight:700;white-space:nowrap}
+.order-info{flex:1;min-width:0}
+.order-name{font-weight:700;font-size:.92rem;color:#1e3a5f;text-transform:capitalize}
+.order-beach{color:#718096;font-size:.8rem;margin-top:1px}
+.order-total{font-weight:700;color:#276749;white-space:nowrap;font-size:.9rem}
+.hint{text-align:center;padding:10px;color:#a0aec0;font-size:.8rem;font-style:italic;background:#f7fafc;border-top:1px solid #edf2f7}
+.loading{text-align:center;padding:60px}
+.spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2d6a9f;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:56px;color:#a0aec0}
+.err{background:#fff5f5;color:#e53e3e;border-radius:12px;padding:20px;text-align:center;margin:16px 0}
+.fab{position:fixed;bottom:20px;right:20px;background:#2d6a9f;color:white;border:none;border-radius:50px;padding:13px 22px;cursor:pointer;font-size:.9rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:100}
+.fab:hover{background:#1e3a5f}
+.save-indicator{position:fixed;top:70px;right:16px;background:#48bb78;color:white;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.save-indicator.visible{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>&#x1F6E0; Gestione Consegne</h1>
+  <span id="status">Caricamento...</span>
+</header>
+<div class="container"><div id="app"><div class="loading"><div class="spinner"></div><p style="margin-top:14px;color:#718096">Caricamento ordini...</p></div></div></div>
+<div class="save-indicator" id="save-indicator">&#x2714; Sequenza salvata</div>
+<button class="fab" onclick="loadData()">&#x1F504; Aggiorna</button>
+<script>
+var BASE = "https://firestore.googleapis.com/v1/projects/spiagge2026/databases/(default)/documents/asporti";
+var KEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
+var URL = BASE + "?key=" + KEY + "&pageSize=300";
+var RE_AMP = /&/g;
+var RE_LT = new RegExp("<", "g");
+var RE_GT = new RegExp(">", "g");
+var RE_QT = /"/g;
+var saveTimer = null;
+var pendingSaves = {};
+var savingCount = 0;
+
+function today() {
+  var d = new Date();
+  return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+"/"+d.getFullYear();
+}
+
+function esc(s) {
+  return String(s).replace(RE_AMP,"&amp;").replace(RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_QT,"&quot;");
+}
+
+function parse(doc) {
+  var f = doc.fields;
+  var seq = 9999;
+  if (f.sequenza) {
+    if (f.sequenza.integerValue !== undefined) seq = parseInt(f.sequenza.integerValue);
+    else if (f.sequenza.doubleValue !== undefined) seq = parseFloat(f.sequenza.doubleValue);
+  }
+  return {id: doc.name.split("/").pop(),
+          nome: f.nome ? f.nome.stringValue : "",
+          orario: f.orario ? f.orario.stringValue : "",
+          spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
+          totale: f.totale ? f.totale.stringValue : "",
+          data: f.data_giorno ? f.data_giorno.stringValue : "",
+          sequenza: seq};
+}
+
+function saveSequenza(id, seq) {
+  var patchUrl = BASE + "/" + id + "?key=" + KEY + "&updateMask.fieldPaths=sequenza";
+  return fetch(patchUrl, {
+    method: "PATCH",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({fields: {sequenza: {integerValue: seq}}})
+  });
+}
+
+function showSaved() {
+  var el = document.getElementById("save-indicator");
+  el.classList.add("visible");
+  setTimeout(function() { el.classList.remove("visible"); }, 2000);
+}
+
+function onSortEnd(slotEl) {
+  var cards = slotEl.querySelectorAll(".order-card");
+  var saves = [];
+  cards.forEach(function(card, idx) {
+    var id = card.getAttribute("data-id");
+    var seqEl = card.querySelector(".order-seq");
+    if (seqEl) { seqEl.textContent = idx + 1; seqEl.className = "order-seq saving"; }
+    saves.push(saveSequenza(id, idx).then(function() {
+      if (seqEl) seqEl.className = "order-seq saved";
+      setTimeout(function() { if (seqEl) seqEl.className = "order-seq"; }, 1500);
+    }));
+  });
+  Promise.all(saves).then(function() {
+    showSaved();
+    document.getElementById("status").textContent = "Salvato &#x2714;";
+    setTimeout(function() {
+      var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("status").textContent = "Agg. " + now;
+    }, 2000);
+  }).catch(function(e) {
+    document.getElementById("status").textContent = "Errore salvataggio";
+  });
+}
+
+function renderSlot(orario, orders) {
+  var lid = "sl" + orario.replace(":", "");
+  var cardsHtml = orders.map(function(o, idx) {
+    var seqNum = o.sequenza < 9999 ? o.sequenza + 1 : idx + 1;
+    return "<div class=\"order-card\" data-id=\"" + o.id + "\">"
+      + "<span class=\"drag-handle\">&#x2630;</span>"
+      + "<div class=\"order-seq\">" + seqNum + "</div>"
+      + "<div class=\"order-time\">&#x23F0; " + esc(o.orario) + "</div>"
+      + "<div class=\"order-info\"><div class=\"order-name\">" + esc(o.nome) + "</div>"
+      + "<div class=\"order-beach\">&#x1F3D6; Spiaggia " + esc(o.spiaggia) + "</div></div>"
+      + "<div class=\"order-total\">" + esc(o.totale) + "</div>"
+      + "</div>";
+  }).join("");
+  return "<div class=\"slot\">"
+    + "<div class=\"slot-header\">"
+    + "<span class=\"slot-title\">&#x1F680; Partenza " + orario + "</span>"
+    + "<span class=\"slot-badge\">" + orders.length + " " + (orders.length===1?"ordine":"ordini") + "</span>"
+    + "</div>"
+    + "<div class=\"sortable-list\" id=\"" + lid + "\">" + cardsHtml + "</div>"
+    + "<div class=\"hint\">&#x2630; Trascina per riordinare la sequenza delle consegne</div>"
+    + "</div>";
+}
+
+function initSortable() {
+  var lists = document.querySelectorAll(".sortable-list");
+  lists.forEach(function(list) {
+    Sortable.create(list, {
+      animation: 150,
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      handle: ".drag-handle",
+      onEnd: function() { onSortEnd(list); }
+    });
+  });
+}
+
+function loadData() {
+  fetch(URL)
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(data) {
+      var oggi = today();
+      var ord = (data.documents||[]).map(parse)
+        .filter(function(o) { return o.data === oggi; })
+        .sort(function(a, b) {
+          if (a.orario !== b.orario) return a.orario < b.orario ? -1 : 1;
+          return a.sequenza - b.sequenza;
+        });
+      var slots = {};
+      ord.forEach(function(o) { if (!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
+      var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+      document.getElementById("status").textContent = "Agg. " + now;
+      var app = document.getElementById("app");
+      if (ord.length === 0) {
+        app.innerHTML = "<div class=\"empty\"><p>Nessuna consegna per oggi.</p></div>";
+        return;
+      }
+      var banner = "<div class=\"date-banner\"><span class=\"date\">&#x1F4C5; " + oggi + "</span><span class=\"count\">" + ord.length + " consegne</span></div>";
+      var html = Object.keys(slots).sort().map(function(or) { return renderSlot(or, slots[or]); }).join("");
+      app.innerHTML = banner + html;
+      initSortable();
+    })
+    .catch(function(e) {
+      document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; Errore: " + e.message + "</div>";
+      document.getElementById("status").textContent = "Errore";
+    });
+}
+
+loadData();
+</script>
+</body>
+</html>
