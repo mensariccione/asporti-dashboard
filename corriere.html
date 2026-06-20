@@ -67,7 +67,10 @@ var BASE = "https://firestore.googleapis.com/v1/projects/spiagge2026/databases/(
 var KEY = "AIzaSyAIN16ON6lUZ_kAUNbw9PE4pfMDW1nty8Q";
 var URL = BASE + "?key=" + KEY + "&pageSize=300";
 var NON_DIGIT = /[^0-9]/g;
-var AMP = /&/g, LT = /</g, GT = />/g, QT = /"/g;
+var RE_AMP = /&/g;
+var RE_LT = new RegExp("<", "g");
+var RE_GT = new RegExp(">", "g");
+var RE_QT = /"/g;
 
 function today() {
   var d = new Date();
@@ -75,7 +78,7 @@ function today() {
 }
 
 function esc(s) {
-  return String(s).replace(AMP,"&amp;").replace(LT,"&lt;").replace(GT,"&gt;").replace(QT,"&quot;");
+  return String(s).replace(RE_AMP,"&amp;").replace(RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_QT,"&quot;");
 }
 
 function wa(tel) {
@@ -89,63 +92,72 @@ function parse(doc) {
   if (f.piatti && f.piatti.arrayValue && f.piatti.arrayValue.values) {
     p = f.piatti.arrayValue.values.map(function(v){
       var pf = v.mapValue.fields;
-      return {
-        desc: pf.descrizione ? pf.descrizione.stringValue : "",
-        qty: pf.quantita ? pf.quantita.stringValue : "1",
-        price: pf.prezzo ? pf.prezzo.stringValue : "",
-        var: pf.varianti ? pf.varianti.stringValue : ""
-      };
+      return {desc: pf.descrizione ? pf.descrizione.stringValue : "",
+              qty: pf.quantita ? pf.quantita.stringValue : "1",
+              price: pf.prezzo ? pf.prezzo.stringValue : "",
+              vr: pf.varianti ? pf.varianti.stringValue : ""};
     });
   }
-  return {
-    id: doc.name.split("/").pop(),
-    nome: f.nome ? f.nome.stringValue : "",
-    orario: f.orario ? f.orario.stringValue : "",
-    spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
-    tel: f.numero_telefono ? f.numero_telefono.stringValue : "",
-    totale: f.totale ? f.totale.stringValue : "",
-    data: f.data_giorno ? f.data_giorno.stringValue : "",
-    piatti: p
-  };
+  return {id: doc.name.split("/").pop(),
+          nome: f.nome ? f.nome.stringValue : "",
+          orario: f.orario ? f.orario.stringValue : "",
+          spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
+          tel: f.numero_telefono ? f.numero_telefono.stringValue : "",
+          totale: f.totale ? f.totale.stringValue : "",
+          data: f.data_giorno ? f.data_giorno.stringValue : "",
+          piatti: p};
 }
 
 function renderOrder(o) {
   var did = "d" + o.id;
-  var ph = o.piatti.length === 0
-    ? '<p style="color:#a0aec0;font-style:italic;padding:8px 0">Nessun piatto</p>'
-    : '<ul class="piatti-list">' + o.piatti.map(function(p){
-        return '<li class="piatto-item"><span class="piatto-qty">x'+p.qty+'</span>'
-          + '<div class="piatto-desc">'+esc(p.desc)+(p.var?'<div class="piatto-var">'+esc(p.var)+'</div>':"")+'</div>'
-          + '<span class="piatto-price">'+esc(p.price)+'</span></li>';
-      }).join("") + "</ul>";
-  var th = o.tel
-    ? '<a class="tel-btn" href="'+wa(o.tel)+'" target="_blank">&#x1F4F2; Chiama su WhatsApp: '+esc(o.tel)+"</a>"
-    : '<p style="color:#a0aec0;font-style:italic">Nessun numero</p>';
-  return '<div class="order-card">'
-    + '<div class="order-main" onclick="tog(\"'+did+'\")"'   >'
-    + '<div class="order-time">&#x23F0; '+esc(o.orario)+'</div>'
-    + '<div class="order-info"><div class="order-name">'+esc(o.nome)+'</div>'
-    + '<div class="order-beach">&#x1F3D6; Spiaggia '+esc(o.spiaggia)+'</div></div>'
-    + '<div class="order-total">'+esc(o.totale)+'</div>'
-    + '<span class="order-arrow" id="a'+did+'">&#9660;</span></div>'
-    + '<div class="order-detail" id="'+did+'"><div class="detail-inner">'
-    + '<div class="detail-section"><div class="detail-label">&#x1F374; Ordinato</div>'+ph+'</div>'
-    + '<div class="detail-section"><div class="detail-label">&#x1F4DE; Contatto</div>'+th+'</div>'
-    + '</div></div></div>';
+  var ph, th;
+  if (o.piatti.length === 0) {
+    ph = "<p style=\"color:#a0aec0;font-style:italic;padding:8px 0\">Nessun piatto</p>";
+  } else {
+    ph = "<ul class=\"piatti-list\">" + o.piatti.map(function(p) {
+      var li = "<li class=\"piatto-item\">";
+      li += "<span class=\"piatto-qty\">x" + p.qty + "</span>";
+      li += "<div class=\"piatto-desc\">" + esc(p.desc);
+      if (p.vr) li += "<div class=\"piatto-var\">" + esc(p.vr) + "</div>";
+      li += "</div>";
+      li += "<span class=\"piatto-price\">" + esc(p.price) + "</span>";
+      li += "</li>";
+      return li;
+    }).join("") + "</ul>";
+  }
+  if (o.tel) {
+    th = "<a class=\"tel-btn\" href=\"" + wa(o.tel) + "\" target=\"_blank\">&#x1F4F2; WhatsApp: " + esc(o.tel) + "</a>";
+  } else {
+    th = "<p style=\"color:#a0aec0;font-style:italic\">Nessun numero</p>";
+  }
+  var html = "<div class=\"order-card\">";
+  html += "<div class=\"order-main\" onclick=\"tog('"+did+"')\">"; 
+  html += "<div class=\"order-time\">&#x23F0; " + esc(o.orario) + "</div>";
+  html += "<div class=\"order-info\"><div class=\"order-name\">" + esc(o.nome) + "</div>";
+  html += "<div class=\"order-beach\">&#x1F3D6; Spiaggia " + esc(o.spiaggia) + "</div></div>";
+  html += "<div class=\"order-total\">" + esc(o.totale) + "</div>";
+  html += "<span class=\"order-arrow\" id=\"a" + did + "\">&#9660;</span></div>";
+  html += "<div class=\"order-detail\" id=\"" + did + "\">";
+  html += "<div class=\"detail-inner\">";
+  html += "<div class=\"detail-section\"><div class=\"detail-label\">&#x1F374; Ordinato</div>" + ph + "</div>";
+  html += "<div class=\"detail-section\"><div class=\"detail-label\">&#x1F4DE; Contatto</div>" + th + "</div>";
+  html += "</div></div></div>";
+  return html;
 }
 
 function renderSlot(orario, orders) {
   var lid = "l" + orario.replace(":", "");
-  return '<div class="slot">'
-    + '<div class="slot-header" onclick="tog2(\"'+lid+'\")">' 
-    + '<span class="slot-title">&#x1F680; Partenza '+orario+'</span>'
-    + '<span class="slot-badge">'+orders.length+' ' + (orders.length===1?"ordine":"ordini") + '</span></div>'
-    + '<div class="orders-list" id="'+lid+'">'+orders.map(renderOrder).join("")+'</div></div>';
+  var html = "<div class=\"slot\">";
+  html += "<div class=\"slot-header\" onclick=\"tog2('"+lid+"')\">"; 
+  html += "<span class=\"slot-title\">&#x1F680; Partenza " + orario + "</span>";
+  html += "<span class=\"slot-badge\">" + orders.length + " " + (orders.length===1?"ordine":"ordini") + "</span></div>";
+  html += "<div class=\"orders-list\" id=\"" + lid + "\">" + orders.map(renderOrder).join("") + "</div></div>";
+  return html;
 }
 
 function tog(id) {
   var el = document.getElementById(id);
-  var ar = document.getElementById("a"+id);
+  var ar = document.getElementById("a" + id);
   if (el) el.classList.toggle("open");
   if (ar) ar.classList.toggle("open");
 }
@@ -157,27 +169,27 @@ function tog2(lid) {
 
 function loadData() {
   fetch(URL)
-    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(data) {
       var oggi = today();
       var ord = (data.documents||[]).map(parse)
-        .filter(function(o){ return o.data === oggi; })
-        .sort(function(a,b){ return a.orario < b.orario ? -1 : a.orario > b.orario ? 1 : 0; });
+        .filter(function(o) { return o.data === oggi; })
+        .sort(function(a, b) { return a.orario < b.orario ? -1 : a.orario > b.orario ? 1 : 0; });
       var slots = {};
-      ord.forEach(function(o){ if(!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
+      ord.forEach(function(o) { if (!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
       var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
       document.getElementById("last-update").textContent = "Agg. " + now;
       var app = document.getElementById("app");
       if (ord.length === 0) {
-        app.innerHTML = '<div class="empty"><div class="empty-icon">&#x1F4EB;</div><p>Nessuna consegna per oggi.</p></div>';
+        app.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">&#x1F4EB;</div><p>Nessuna consegna per oggi.</p></div>";
         return;
       }
-      var banner = '<div class="date-banner"><span class="date">&#x1F4C5; '+oggi+'</span><span class="count">'+ord.length+' consegne</span></div>';
-      var html = Object.keys(slots).sort().map(function(or){ return renderSlot(or,slots[or]); }).join("");
+      var banner = "<div class=\"date-banner\"><span class=\"date\">&#x1F4C5; " + oggi + "</span><span class=\"count\">" + ord.length + " consegne</span></div>";
+      var html = Object.keys(slots).sort().map(function(or) { return renderSlot(or, slots[or]); }).join("");
       app.innerHTML = banner + html;
     })
-    .catch(function(e){
-      document.getElementById("app").innerHTML = '<div class="err">&#x274C; Errore: '+e.message+'</div>';
+    .catch(function(e) {
+      document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; Errore: " + e.message + "</div>";
       document.getElementById("last-update").textContent = "Errore";
     });
 }
