@@ -104,7 +104,7 @@ function parse(doc) {
     if (f.sequenza.integerValue !== undefined) seq = parseInt(f.sequenza.integerValue);
     else if (f.sequenza.doubleValue !== undefined) seq = parseFloat(f.sequenza.doubleValue);
   }
-  return {id: doc.name.split("/").pop(),h
+  return {id: doc.name.split("/").pop(),
           nome: f.nome ? f.nome.stringValue : "",
           orario: f.orario ? f.orario.stringValue : "",
           spiaggia: f.spiaggia ? f.spiaggia.stringValue : "",
