@@ -177,8 +177,8 @@ function tog2(lid) {
 }
 
 function loadData() {
-  fetch(URL)
-    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  var ctrl=new AbortController();var tid=setTimeout(function(){ctrl.abort();},8000);fetch(URL,{signal:ctrl.signal})
+    .then(function(r) { clearTimeout(tid); if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(data) {
       var oggi = today();
       var ord = (data.documents||[]).map(parse)
@@ -201,8 +201,8 @@ function loadData() {
       app.innerHTML = banner + html;
     })
     .catch(function(e) {
-      document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; Errore: " + e.message + "</div>";
-      document.getElementById("last-update").textContent = "Errore";
+            var msg = e.name === 'AbortError' ? 'Timeout (quota Firestore esaurita - riprova domani)' : 'Errore: ' + e.message;
+            document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; " + msg + "</div>";
     });
 }
 
