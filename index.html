@@ -169,50 +169,58 @@ function initTodayFilter(){
   renderAll();
 }
 
+function fetchAllPages(url, pageToken, acc) {
+  var fullUrl = url + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+  return fetch(fullUrl).then(function(r){ return r.json(); }).then(function(data){
+    var docs = data.documents || [];
+    var all = acc.concat(docs);
+    if (data.nextPageToken) return fetchAllPages(url, data.nextPageToken, all);
+    return all;
+  });
+}
+
 function loadData() {
   document.getElementById('orders-section').innerHTML = '<div class="loading">Caricamento...</div>';
-  fetch(BASE + 'asporti?key=' + APIKEY + '&pageSize=300')
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      var docs = data.documents || [];
-      allOrdini = docs.map(function(doc) {
-        var f = doc.fields || {};
-        var id = doc.name.split('/').pop();
-        var pArr = getArr(f, 'piatti');
-        var piatti = pArr.map(function(p) {
-          var m = (p.mapValue && p.mapValue.fields) || {};
-          return {
-            quantita:    getStr(m,'quantita') || '1',
-            descrizione: getStr(m,'descrizione'),
-            prezzo:      getStr(m,'prezzo'),
-            varianti:    getStr(m,'varianti')
-          };
-        }).filter(function(p){ return p.descrizione; });
+  fetchAllPages(BASE + 'asporti?' + 'key=' + APIKEY + '&pageSize=300', null, [])
+  .then(function(docs) {
+    allOrdini = docs.map(function(doc) {
+      var f = doc.fields || {};
+      var id = doc.name.split('/').pop();
+      var pArr = getArr(f, 'piatti');
+      var piatti = pArr.map(function(p) {
+        var m = (p.mapValue && p.mapValue.fields) || {};
         return {
-          id:         id,
-          nome:       getStr(f,'nome'),
-          telefono:   normTel(getStr(f,'numero_telefono')),
-          spiaggia:   getStr(f,'spiaggia'),
-          orario:     getStr(f,'orario'),
-          totale:     getStr(f,'totale'),
-          totaleNum:  parseEuro(getStr(f,'totale')),
-          data:       getStr(f,'data_giorno'),
-          timestamp:  getStr(f,'timestamp'),
-          piatti:     piatti
+          quantita: getStr(m,'quantita') || '1',
+          descrizione: getStr(m,'descrizione'),
+          prezzo: getStr(m,'prezzo'),
+          varianti: getStr(m,'varianti')
         };
-      });
-      allOrdini.sort(function(a,b){
-        var da = parseDate(a.data), db = parseDate(b.data);
-        if (!da || !db) return 0;
-        if (da > db) return -1; if (da < db) return 1;
-        return (b.orario||'').localeCompare(a.orario||'');
-      });
-      document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
-      if(!window.__fi){initTodayFilter();window.__fi=true;}else{renderAll();}
-    })
-    .catch(function(e){
-      document.getElementById('orders-section').innerHTML = '<div class="err">Errore caricamento: ' + e.message + '</div>';
+      }).filter(function(p){ return p.descrizione; });
+      return {
+        id: id,
+        nome: getStr(f,'nome'),
+        telefono: normTel(getStr(f,'numero_telefono')),
+        spiaggia: getStr(f,'spiaggia'),
+        orario: getStr(f,'orario'),
+        totale: getStr(f,'totale'),
+        totaleNum: parseEuro(getStr(f,'totale')),
+        data: getStr(f,'data_giorno'),
+        timestamp: getStr(f,'timestamp'),
+        piatti: piatti
+      };
     });
+    allOrdini.sort(function(a,b){
+      var da = parseDate(a.data), db = parseDate(b.data);
+      if (!da || !db) return 0;
+      if (da > db) return -1; if (da < db) return 1;
+      return (b.orario||'').localeCompare(a.orario||'');
+    });
+    document.getElementById('last-update').textContent = 'Aggiornato: ' + new Date().toLocaleString('it-IT');
+    if(!window.__fi){initTodayFilter();window.__fi=true;}else{renderAll();}
+  })
+  .catch(function(e){
+    document.getElementById('orders-section').innerHTML = '<div class="err">Errore caricamento: ' + e.message + '</div>';
+  });
 }
 
 function applyFilter() {
