@@ -176,34 +176,49 @@ function tog2(lid) {
   if (el) el.classList.toggle("closed");
 }
 
+function fetchAllPages(url, pageToken, acc) {
+  var fullUrl = url + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+  var ctrl = new AbortController();
+  var tid = setTimeout(function(){ ctrl.abort(); }, 8000);
+  return fetch(fullUrl, {signal: ctrl.signal}).then(function(r) {
+    clearTimeout(tid);
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(function(data) {
+    var docs = data.documents || [];
+    var all = acc.concat(docs);
+    if (data.nextPageToken) return fetchAllPages(url, data.nextPageToken, all);
+    return all;
+  });
+}
+
 function loadData() {
-  var ctrl=new AbortController();var tid=setTimeout(function(){ctrl.abort();},8000);fetch(FETCH_URL,{signal:ctrl.signal})
-    .then(function(r) { clearTimeout(tid); if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(data) {
-      var oggi = today();
-      var ord = (data.documents||[]).map(parse)
-        .filter(function(o) { return o.data === oggi; })
-        .sort(function(a, b) {
-          if (a.orario !== b.orario) return a.orario < b.orario ? -1 : 1;
-          return a.sequenza - b.sequenza;
-        });
-      var slots = {};
-      ord.forEach(function(o) { if (!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
-      var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-      document.getElementById("last-update").textContent = "Agg. " + now;
-      var app = document.getElementById("app");
-      if (ord.length === 0) {
-        app.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">&#x1F4EB;</div><p>Nessuna consegna per oggi.</p></div>";
-        return;
-      }
-      var banner = "<div class=\"date-banner\"><span class=\"date\">&#x1F4C5; " + oggi + "</span><span class=\"count\">" + ord.length + " consegne</span></div>";
-      var html = Object.keys(slots).sort().map(function(or) { return renderSlot(or, slots[or]); }).join("");
-      app.innerHTML = banner + html;
-    })
-    .catch(function(e) {
-            var msg = e.name === 'AbortError' ? 'Timeout (quota Firestore esaurita - riprova domani)' : 'Errore: ' + e.message;
-            document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; " + msg + "</div>";
+  fetchAllPages(FETCH_URL, null, [])
+  .then(function(docs) {
+    var oggi = today();
+    var ord = docs.map(parse)
+    .filter(function(o) { return o.data === oggi; })
+    .sort(function(a, b) {
+      if (a.orario !== b.orario) return a.orario < b.orario ? -1 : 1;
+      return a.sequenza - b.sequenza;
     });
+    var slots = {};
+    ord.forEach(function(o) { if (!slots[o.orario]) slots[o.orario]=[]; slots[o.orario].push(o); });
+    var now = new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    document.getElementById("last-update").textContent = "Agg. " + now;
+    var app = document.getElementById("app");
+    if (ord.length === 0) {
+      app.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">&#x1F4EB;</div><p>Nessuna consegna per oggi.</p></div>";
+      return;
+    }
+    var banner = "<div class=\"date-banner\"><span class=\"date\">&#x1F4C5; " + oggi + "</span><span class=\"count\">" + ord.length + " consegne</span></div>";
+    var html = Object.keys(slots).sort().map(function(or) { return renderSlot(or, slots[or]); }).join("");
+    app.innerHTML = banner + html;
+  })
+  .catch(function(e) {
+    var msg = e.name === 'AbortError' ? 'Timeout (quota Firestore esaurita - riprova domani)' : 'Errore: ' + e.message;
+    document.getElementById("app").innerHTML = "<div class=\"err\">&#x274C; " + msg + "</div>";
+  });
 }
 
 loadData();
