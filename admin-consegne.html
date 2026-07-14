@@ -118,16 +118,25 @@ function showTab(name,btn){
 }
 function setToday(){var td=displayToInput(todayStr());document.getElementById("dateFrom").value=td;document.getElementById("dateTo").value=td;renderStats();}
 function setAll(){document.getElementById("dateFrom").value="";document.getElementById("dateTo").value="";renderStats();}
+function fetchAllPages(url, pageToken, acc){
+  var fullUrl = url + (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : "");
+  return fetch(fullUrl).then(function(r){return r.json();}).then(function(data){
+    var docs = data.documents || [];
+    var all = acc.concat(docs);
+    if (data.nextPageToken) return fetchAllPages(url, data.nextPageToken, all);
+    return all;
+  });
+}
 function loadData(){
   document.getElementById("meta").textContent="Aggiornamento...";
-  fetch(FETCH_URL).then(function(r){return r.json();}).then(function(data){
+  fetchAllPages(FETCH_URL, null, []).then(function(docs){
     allDocs=[];
-    (data.documents||[]).forEach(function(doc){
+    docs.forEach(function(doc){
       var f=doc.fields||{};
-      allDocs.push({id:doc.name.split("/").pop(),nome:getField(f.nome),orario:getField(f.orario),
-        spiaggia:getField(f.spiaggia),totale:getField(f.totale),numero_telefono:getField(f.numero_telefono),
-        data_giorno:getField(f.data_giorno),piatti:getField(f.piatti)||[],
-        sequenza:getField(f.sequenza)!==""?parseInt(getField(f.sequenza)):9999});
+      allDocs.push({id:doc.name.split('/').pop(),nome:getField(f.nome),orario:getField(f.orario),
+      spiaggia:getField(f.spiaggia),totale:getField(f.totale),numero_telefono:getField(f.numero_telefono),
+      data_giorno:getField(f.data_giorno),piatti:getField(f.piatti)||[],
+      sequenza:getField(f.sequenza)!==""?parseInt(getField(f.sequenza)):9999});
     });
     var now=new Date();
     document.getElementById("meta").textContent="Agg. "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
