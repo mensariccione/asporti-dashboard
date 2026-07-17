@@ -105,7 +105,8 @@ function getField(f){
   if(f.mapValue){var obj={};Object.keys(f.mapValue.fields||{}).forEach(function(k){obj[k]=getField(f.mapValue.fields[k]);});return obj;}
   return"";
 }
-function todayStr(){var d=new Date();return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
+function parseEuroTot(s){if(!s)return 0;var n=parseFloat(String(s).replace(/[^\d,.-]/g,"").replace(",","."));return isNaN(n)?0:n;}
+  function todayStr(){var d=new Date();return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
 function dateToInt(s){if(!s)return null;var p=s.split("/");if(p.length!==3)return null;return parseInt(p[2])*10000+parseInt(p[1])*100+parseInt(p[0]);}
 function inputToInt(s){if(!s)return null;var p=s.split("-");if(p.length!==3)return null;return parseInt(p[0])*10000+parseInt(p[1])*100+parseInt(p[2]);}
 function displayToInput(s){if(!s)return"";var p=s.split("/");return p[2]+"-"+p[1]+"-"+p[0];}
@@ -153,14 +154,14 @@ function renderSlots(){
   var html="";
   SLOT_ORDER.forEach(function(slot){
     var orders=slotMap[slot];if(!orders||!orders.length)return;
-    var tot=orders.reduce(function(s,d){return s+(parseFloat(d.totale)||0);},0);
+    var tot=orders.reduce(function(s,d){return s+(parseEuroTot(d.totale)||0);},0);
     html+='<div class="section"><div class="section-header">🚐 Partenza '+slot+'</div>'+
     '<div class="slot-subheader"><span>'+orders.length+' '+( orders.length===1?"ordine":"ordini")+'</span><span>'+tot.toFixed(2).replace(".",",")+' €</span></div>'+
     '<div class="order-list" id="list-'+slot+'">'+
     orders.map(function(o,i){return '<div class="order-card" data-id="'+o.id+'">'+
       '<span class="drag-handle">☰</span><div class="seq-badge">'+( i+1)+'</div>'+
       '<div class="order-info"><div class="order-name">'+o.nome+'</div><div class="order-meta">🏖 Spiaggia '+o.spiaggia+'</div></div>'+
-      '<div class="order-total">'+( parseFloat(o.totale)||0).toFixed(2).replace(".",",")+' €</div></div>';}).join("")+
+      '<div class="order-total">'+( parseEuroTot(o.totale)||0).toFixed(2).replace(".",",")+' €</div></div>';}).join("")+
     '</div><div class="hint">☰ Trascina per riordinare la sequenza delle consegne</div></div>';
   });
   if(!html)html='<div class="empty">Nessuna consegna per oggi</div>';
@@ -194,22 +195,22 @@ function renderStats(){
     return true;
   });
   var nDays=Object.keys(filtered.reduce(function(acc,d){acc[d.data_giorno]=1;return acc;},{})).length;
-  var totale=filtered.reduce(function(s,d){return s+(parseFloat(d.totale)||0);},0);
+  var totale=filtered.reduce(function(s,d){return s+(parseEuroTot(d.totale)||0);},0);
   document.getElementById("statSummary").innerHTML=
     sCard("ORDINI",filtered.length)+sCard("INCASSO TOTALE",totale.toFixed(2).replace(".",",")+' €')+
     sCard("GIORNI",nDays)+sCard("MEDIA/GIORNO",nDays>0?(totale/nDays).toFixed(2).replace(".",",")+' €':"—");
   var artMap={};
   filtered.forEach(function(d){(d.piatti||[]).forEach(function(p){
-    var desc=p.descrizione||"?";var qty=parseInt(p.quantita)||1;var pr=parseFloat(p.prezzo)||0;
+    var desc=p.descrizione||"?";var qty=parseInt(p.quantita)||1;var pr=parseEuroTot(p.prezzo)||0;
     if(!artMap[desc])artMap[desc]={qty:0,inc:0};
     artMap[desc].qty+=qty;artMap[desc].inc+=pr*qty;
   });});
   _artData=Object.keys(artMap).map(function(k){return{desc:k,qty:artMap[k].qty,inc:artMap[k].inc};});
   var cliMap={};
-  filtered.forEach(function(d){var key=d.nome+" ("+d.numero_telefono+")";if(!cliMap[key])cliMap[key]={ordini:0,spesa:0};cliMap[key].ordini++;cliMap[key].spesa+=parseFloat(d.totale)||0;});
+  filtered.forEach(function(d){var key=d.nome+" ("+d.numero_telefono+")";if(!cliMap[key])cliMap[key]={ordini:0,spesa:0};cliMap[key].ordini++;cliMap[key].spesa+=parseEuroTot(d.totale)||0;});
   _cliData=Object.keys(cliMap).map(function(k){return{nome:k,ordini:cliMap[k].ordini,spesa:cliMap[k].spesa};});
   var spMap={};
-  filtered.forEach(function(d){var sp=d.spiaggia||"N/D";if(!spMap[sp])spMap[sp]={ordini:0,inc:0};spMap[sp].ordini++;spMap[sp].inc+=parseFloat(d.totale)||0;});
+  filtered.forEach(function(d){var sp=d.spiaggia||"N/D";if(!spMap[sp])spMap[sp]={ordini:0,inc:0};spMap[sp].ordini++;spMap[sp].inc+=parseEuroTot(d.totale)||0;});
   _spData=Object.keys(spMap).map(function(k){return{sp:k,ordini:spMap[k].ordini,inc:spMap[k].inc};});
   sortState={art:{col:0,dir:-1},cli:{col:0,dir:-1},sp:{col:0,dir:-1}};
   document.getElementById("statsSection").innerHTML="";
