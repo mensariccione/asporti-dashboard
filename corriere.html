@@ -46,6 +46,8 @@ header h1{font-size:1.2rem}
 .piatto-price{color:#276749;font-weight:600;white-space:nowrap}
 .tel-btn{display:flex;align-items:center;gap:10px;background:#25D366;color:white;border-radius:10px;padding:13px 16px;text-decoration:none;font-weight:600;font-size:.9rem;justify-content:center;transition:background .2s;margin-top:4px}
 .tel-btn:hover{background:#1aad4f}
+.call-btn{background:#2d6a9f;margin-top:8px}
+.call-btn:hover{background:#1e3a5f}
 .loading{text-align:center;padding:60px}
 .spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2d6a9f;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -135,6 +137,7 @@ function renderOrder(o, idx) {
   }
   if (o.tel) {
     th = "<a class=\"tel-btn\" href=\"" + wa(o.tel) + "\" target=\"_blank\">&#x1F4F2; WhatsApp: " + esc(o.tel) + "</a>";
+    th += "<a class=\"tel-btn call-btn\" href=\"tel:" + esc(o.tel) + "\">📞 Chiama: " + esc(o.tel) + "</a>";
   } else {
     th = "<p style=\"color:#a0aec0;font-style:italic\">Nessun numero</p>";
   }
