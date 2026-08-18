@@ -249,6 +249,16 @@ function renderStats(){
   document.getElementById('stat-giorni').textContent = Object.keys(giorniSet).length;
 }
 
+function getMonday(d){
+  var dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var day = dt.getDay();
+  var diff = (day===0 ? -6 : 1-day);
+  dt.setDate(dt.getDate()+diff);
+  return dt;
+}
+function fmtDDMM(d){
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);
+}
 var GIORNI_LABELS = ['Luned\u00EC','Marted\u00EC','Mercoled\u00EC','Gioved\u00EC','Venerd\u00EC','Sabato','Domenica'];
 var SLOTS = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
 function slotKey(orario){
@@ -266,6 +276,7 @@ function ensureContentArea(){
     '<div class="charts-grid">' +
       '<div class="section chart-box"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C5} Ordini per giorno della settimana</h2><canvas id="chart-giorni" height="220"></canvas></div>' +
       '<div class="section chart-box"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{23F0} Ordini per fascia oraria</h2><canvas id="chart-orari" height="220"></canvas></div>' +
+      '<div class="section chart-box full"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C6} Ordini per settimana</h2><canvas id="chart-settimane" height="110"></canvas></div>' +
       '<div class="section chart-box full"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C8} Andamento ordini nel periodo</h2><canvas id="chart-andamento" height="110"></canvas></div>' +
     '</div>' +
     '<div class="reports-grid">' +
@@ -320,8 +331,34 @@ function renderCharts(){
   var trendLabels = dateKeys;
   var trendData = dateKeys.map(function(k){ return byDate[k].count; });
 
+  var weekLabels = [], weekData = [];
+  var minDateAll = null;
+  allOrdini.forEach(function(o){ if(o.dateObj && (!minDateAll || o.dateObj < minDateAll)) minDateAll = o.dateObj; });
+  if(minDateAll){
+    var wYear = minDateAll.getFullYear();
+    var wCur = getMonday(minDateAll);
+    var wEndMonday = getMonday(new Date(wYear, 9, 31));
+    var byWeek = [];
+    while(wCur <= wEndMonday){
+      var wStart = new Date(wCur);
+      var wEnd = new Date(wCur); wEnd.setDate(wEnd.getDate()+6);
+      byWeek.push({ start: wStart, end: wEnd, count: 0 });
+      wCur = new Date(wCur); wCur.setDate(wCur.getDate()+7);
+    }
+    filteredOrdini.forEach(function(o){
+      if(!o.dateObj) return;
+      var mon = getMonday(o.dateObj).getTime();
+      for(var wi=0; wi<byWeek.length; wi++){
+        if(byWeek[wi].start.getTime() === mon){ byWeek[wi].count++; break; }
+      }
+    });
+    weekLabels = byWeek.map(function(w){ return fmtDDMM(w.start)+'\u2013'+fmtDDMM(w.end); });
+    weekData = byWeek.map(function(w){ return w.count; });
+  }
+
   if(charts.giorni) charts.giorni.destroy();
   if(charts.orari) charts.orari.destroy();
+  if(charts.settimane) charts.settimane.destroy();
   if(charts.andamento) charts.andamento.destroy();
 
   charts.giorni = new Chart(document.getElementById('chart-giorni'), {
@@ -333,6 +370,11 @@ function renderCharts(){
     type: 'bar',
     data: { labels: slotLabels, datasets: [{ label: 'Ordini', data: slotData, backgroundColor: '#d69e2e', borderRadius: 6 }] },
     options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
+  });
+  charts.settimane = new Chart(document.getElementById('chart-settimane'), {
+    type: 'bar',
+    data: { labels: weekLabels, datasets: [{ label: 'Ordini', data: weekData, backgroundColor: '#319795', borderRadius: 6 }] },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}, x:{ticks:{maxRotation:60,minRotation:45}}} }
   });
   charts.andamento = new Chart(document.getElementById('chart-andamento'), {
     type: 'line',
