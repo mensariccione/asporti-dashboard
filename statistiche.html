@@ -102,6 +102,7 @@ var allOrdini = [];
 var filteredOrdini = [];
 var charts = {};
 var sortState = { piatti: 'qty', spiagge: 'ordini', clienti: 'spesa' };
+var chartMetric = 'count';
 
 function escapeHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, function(c){
@@ -273,10 +274,15 @@ function ensureContentArea(){
   if(el.dataset.built === '1') return;
   el.dataset.built = '1';
   el.innerHTML =
+    '<div class="section" style="padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+      '<label style="font-size:.9rem;color:#4a5568;font-weight:600">Visualizza grafici per:</label>' +
+      '<button class="btn btn-secondary active" id="metric-count-btn" onclick="setMetric(\'count\')">\u{1F522} N. ordini</button>' +
+      '<button class="btn btn-secondary" id="metric-revenue-btn" onclick="setMetric(\'revenue\')">\u{1F4B6} Incasso</button>' +
+    '</div>' +
     '<div class="charts-grid">' +
-      '<div class="section chart-box"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C5} Ordini per giorno della settimana</h2><canvas id="chart-giorni" height="220"></canvas></div>' +
-      '<div class="section chart-box"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{23F0} Ordini per fascia oraria</h2><canvas id="chart-orari" height="220"></canvas></div>' +
-      '<div class="section chart-box full"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C6} Ordini per settimana</h2><canvas id="chart-settimane" height="110"></canvas></div>' +
+      '<div class="section chart-box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="color:#1e3a5f">\u{1F4C5} Ordini per giorno della settimana</h2><span class="badge" id="giorni-metric-label"></span></div><canvas id="chart-giorni" height="220"></canvas></div>' +
+      '<div class="section chart-box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="color:#1e3a5f">\u{23F0} Ordini per fascia oraria</h2><span class="badge" id="orari-metric-label"></span></div><canvas id="chart-orari" height="220"></canvas></div>' +
+      '<div class="section chart-box full"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="color:#1e3a5f">\u{1F4C6} Ordini per settimana</h2><span class="badge" id="settimane-metric-label"></span></div><canvas id="chart-settimane" height="110"></canvas></div>' +
       '<div class="section chart-box full"><h2 style="margin-bottom:14px;color:#1e3a5f">\u{1F4C8} Andamento ordini nel periodo</h2><canvas id="chart-andamento" height="110"></canvas></div>' +
     '</div>' +
     '<div class="reports-grid">' +
@@ -306,18 +312,21 @@ function setSort(table, field){
 }
 function renderCharts(){
   ensureContentArea();
-  var byDay = [0,0,0,0,0,0,0];
+  var byDayCount = [0,0,0,0,0,0,0];
+  var byDayRevenue = [0,0,0,0,0,0,0];
   filteredOrdini.forEach(function(o){
     if(!o.dateObj) return;
     var idx = (o.dateObj.getDay()+6)%7;
-    byDay[idx]++;
+    byDayCount[idx]++;
+    byDayRevenue[idx] += o.totaleNum;
   });
-  var bySlot = {};
-  SLOTS.forEach(function(s){ bySlot[s]=0; });
-  bySlot['Altro'] = 0;
-  filteredOrdini.forEach(function(o){ bySlot[slotKey(o.orario)]++; });
+  var bySlotCount = {}, bySlotRevenue = {};
+  SLOTS.forEach(function(s){ bySlotCount[s]=0; bySlotRevenue[s]=0; });
+  bySlotCount['Altro'] = 0; bySlotRevenue['Altro'] = 0;
+  filteredOrdini.forEach(function(o){ var k = slotKey(o.orario); bySlotCount[k]++; bySlotRevenue[k] += o.totaleNum; });
   var slotLabels = SLOTS.concat(['Altro']);
-  var slotData = slotLabels.map(function(s){ return bySlot[s]; });
+  var slotCountData = slotLabels.map(function(s){ return bySlotCount[s]; });
+  var slotRevenueData = slotLabels.map(function(s){ return Math.round(bySlotRevenue[s]*100)/100; });
 
   var byDate = {};
   filteredOrdini.forEach(function(o){
@@ -331,7 +340,7 @@ function renderCharts(){
   var trendLabels = dateKeys;
   var trendData = dateKeys.map(function(k){ return byDate[k].count; });
 
-  var weekLabels = [], weekData = [];
+  var weekLabels = [], weekCountData = [], weekRevenueData = [];
   var minDateAll = null;
   allOrdini.forEach(function(o){ if(o.dateObj && (!minDateAll || o.dateObj < minDateAll)) minDateAll = o.dateObj; });
   if(minDateAll){
@@ -342,19 +351,34 @@ function renderCharts(){
     while(wCur <= wEndMonday){
       var wStart = new Date(wCur);
       var wEnd = new Date(wCur); wEnd.setDate(wEnd.getDate()+6);
-      byWeek.push({ start: wStart, end: wEnd, count: 0 });
+      byWeek.push({ start: wStart, end: wEnd, count: 0, revenue: 0 });
       wCur = new Date(wCur); wCur.setDate(wCur.getDate()+7);
     }
     filteredOrdini.forEach(function(o){
       if(!o.dateObj) return;
       var mon = getMonday(o.dateObj).getTime();
       for(var wi=0; wi<byWeek.length; wi++){
-        if(byWeek[wi].start.getTime() === mon){ byWeek[wi].count++; break; }
+        if(byWeek[wi].start.getTime() === mon){ byWeek[wi].count++; byWeek[wi].revenue += o.totaleNum; break; }
       }
     });
-    weekLabels = byWeek.map(function(w){ return fmtDDMM(w.start)+'\u2013'+fmtDDMM(w.end); });
-    weekData = byWeek.map(function(w){ return w.count; });
+    weekLabels = byWeek.map(function(w){ return fmtDDMM(w.start)+'–'+fmtDDMM(w.end); });
+    weekCountData = byWeek.map(function(w){ return w.count; });
+    weekRevenueData = byWeek.map(function(w){ return Math.round(w.revenue*100)/100; });
   }
+
+  var isRevenue = chartMetric === 'revenue';
+  var metricLabel = isRevenue ? 'Incasso' : 'Ordini';
+  var giorniData = isRevenue ? byDayRevenue.map(function(v){ return Math.round(v*100)/100; }) : byDayCount;
+  var orariData = isRevenue ? slotRevenueData : slotCountData;
+  var settimaneData = isRevenue ? weekRevenueData : weekCountData;
+
+  var yTicksCallback = function(value){ return isRevenue ? Math.round(value).toLocaleString('it-IT') + ' €' : value; };
+  var tooltipLabelCallback = function(ctx){ var v = ctx.parsed.y; return isRevenue ? (' ' + formatEuro(v)) : (' ' + v + ' ordini'); };
+
+  ['giorni-metric-label','orari-metric-label','settimane-metric-label'].forEach(function(id){
+    var lbl = document.getElementById(id);
+    if(lbl) lbl.textContent = isRevenue ? '\u{1F4B6} Incasso' : '\u{1F522} N. ordini';
+  });
 
   if(charts.giorni) charts.giorni.destroy();
   if(charts.orari) charts.orari.destroy();
@@ -363,24 +387,32 @@ function renderCharts(){
 
   charts.giorni = new Chart(document.getElementById('chart-giorni'), {
     type: 'bar',
-    data: { labels: GIORNI_LABELS, datasets: [{ label: 'Ordini', data: byDay, backgroundColor: '#2d6a9f', borderRadius: 6 }] },
-    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
+    data: { labels: GIORNI_LABELS, datasets: [{ label: metricLabel, data: giorniData, backgroundColor: '#2d6a9f', borderRadius: 6 }] },
+    options: { responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipLabelCallback}}}, scales:{y:{beginAtZero:true,ticks:{precision:0,callback:yTicksCallback}}} }
   });
   charts.orari = new Chart(document.getElementById('chart-orari'), {
     type: 'bar',
-    data: { labels: slotLabels, datasets: [{ label: 'Ordini', data: slotData, backgroundColor: '#d69e2e', borderRadius: 6 }] },
-    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
+    data: { labels: slotLabels, datasets: [{ label: metricLabel, data: orariData, backgroundColor: '#d69e2e', borderRadius: 6 }] },
+    options: { responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipLabelCallback}}}, scales:{y:{beginAtZero:true,ticks:{precision:0,callback:yTicksCallback}}} }
   });
   charts.settimane = new Chart(document.getElementById('chart-settimane'), {
     type: 'bar',
-    data: { labels: weekLabels, datasets: [{ label: 'Ordini', data: weekData, backgroundColor: '#319795', borderRadius: 6 }] },
-    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}, x:{ticks:{maxRotation:60,minRotation:45}}} }
+    data: { labels: weekLabels, datasets: [{ label: metricLabel, data: settimaneData, backgroundColor: '#319795', borderRadius: 6 }] },
+    options: { responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipLabelCallback}}}, scales:{y:{beginAtZero:true,ticks:{precision:0,callback:yTicksCallback}}, x:{ticks:{maxRotation:60,minRotation:45}}} }
   });
   charts.andamento = new Chart(document.getElementById('chart-andamento'), {
     type: 'line',
     data: { labels: trendLabels, datasets: [{ label: 'Ordini al giorno', data: trendData, borderColor: '#38a169', backgroundColor: 'rgba(56,161,105,.15)', fill:true, tension:.25, pointRadius:2 }] },
     options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
   });
+}
+function setMetric(m){
+  chartMetric = m;
+  var cBtn = document.getElementById('metric-count-btn');
+  var rBtn = document.getElementById('metric-revenue-btn');
+  if(cBtn) cBtn.classList.toggle('active', m==='count');
+  if(rBtn) rBtn.classList.toggle('active', m==='revenue');
+  renderCharts();
 }
 
 function sortList(list, field){
